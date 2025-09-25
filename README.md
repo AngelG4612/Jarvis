@@ -18,25 +18,25 @@ It combines:
 
 ```
 jarvis/
-├── app/                    # Flutter mobile app
-│   ├── lib/               # source code (API clients, models, UI, state)
-│   ├── test/              # unit & widget tests
-│   └── integration_test/  # optional end-to-end tests
+├── app/                     # Flutter mobile app
+│   ├── lib/                 # source code (API clients, models, UI, state)
+│   ├── test/                # unit & widget tests
+│   └── integration_test/    # optional end-to-end tests
 │
-├── mirror/                # MagicMirror modules + config API
+├── mirror/                  # MagicMirror modules + config API
 │   ├── modules/
-│   │   └── mmm-jarvis-ha/ # Custom HA integration module
+│   │   └── mmm-jarvis-ha/   # Custom HA integration module
 │   └── services/config-api/ # Node/Express API for layout + brightness
 │
-├── infra/                 # Infrastructure configs
-│   ├── docker-compose.yml # HA + Mosquitto stack
-│   ├── home-assistant/    # HA configs (YAML)
-│   └── mosquitto/         # Broker config + ACLs
+├── infra/                   # Infrastructure configs
+│   ├── docker-compose.yml   # HA + Mosquitto stack
+│   ├── home-assistant/      # HA configs (YAML)
+│   └── mosquitto/           # Broker config + ACLs
 │
-├── docs/                  # Documentation
+├── docs/                    # Documentation
 │   └── architecture.md
 │
-└── README.md             # You are here
+└── README.md             
 ```
 
 
