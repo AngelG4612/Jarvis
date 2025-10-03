@@ -2,6 +2,7 @@
 
 # MagicMirror Installation and Setup Script
 # This script automates the MagicMirror setup process for the J.A.R.V.I.S. project
+# MagicMirror is integrated as part of this project and can be modified independently
 
 set -e  # Exit on any error
 
@@ -9,8 +10,8 @@ echo "🪞 Starting MagicMirror setup for J.A.R.V.I.S..."
 
 # Check if MagicMirror directory exists
 if [ ! -d "MagicMirror" ]; then
-    echo "❌ MagicMirror directory not found. Please clone the MagicMirror repository first:"
-    echo "git clone https://github.com/MichMich/MagicMirror"
+    echo "❌ MagicMirror directory not found. This should not happen as MagicMirror is part of this project."
+    echo "Please ensure you're running this script from the mirror/ directory of the J.A.R.V.I.S. project."
     exit 1
 fi
 
