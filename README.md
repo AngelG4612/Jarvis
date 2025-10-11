@@ -19,24 +19,35 @@ It combines:
 ```
 jarvis/
 ├── app/                     # Flutter mobile app
-│   ├── lib/                 # source code (API clients, models, UI, state)
-│   ├── test/                # unit & widget tests
-│   └── integration_test/    # optional end-to-end tests
+│   └── jarvis/              # Main Flutter project
+│       ├── lib/             # Source code (API clients, models, UI, state)
+│       ├── test/            # Unit & widget tests
+│       ├── android/         # Android platform files
+│       ├── ios/             # iOS platform files
+│       ├── web/             # Web platform files
+│       ├── windows/         # Windows platform files
+│       ├── linux/           # Linux platform files
+│       ├── macos/           # macOS platform files
+│       └── pubspec.yaml     # Flutter dependencies
 │
-├── mirror/                  # MagicMirror modules + config API
-│   ├── modules/
-│   │   └── mmm-jarvis-ha/   # Custom HA integration module
-│   └── services/config-api/ # Node/Express API for layout + brightness
+├── mirror/                  # MagicMirror integration
+│   ├── MagicMirror/         # Complete MagicMirror codebase (integrated)
+│   │   ├── js/              # Core JavaScript files
+│   │   ├── css/             # Styling and themes
+│   │   ├── modules/         # Default and custom modules
+│   │   ├── config/          # Configuration files
+│   │   ├── translations/    # Language files
+│   │   └── package.json     # Node.js dependencies
+│   ├── install.sh           # MagicMirror setup script
+│   └── ReadMe.txt           # Mirror-specific documentation
 │
 ├── infra/                   # Infrastructure configs
-│   ├── docker-compose.yml   # HA + Mosquitto stack
+    ├── docker-compose.yml   # HA + Mosquitto stack
 │   ├── home-assistant/      # HA configs (YAML)
-│   └── mosquitto/           # Broker config + ACLs
+│   ├── mosquitto/           # Broker config + ACLs
+│   └── ReadMe.txt           # Infrastructure documentation
 │
-├── docs/                    # Documentation
-│   └── architecture.md
-│
-└── README.md             
+└── README.md                # Main project documentation
 ```
 
 
@@ -80,4 +91,3 @@ node --run install-mm
 ```bash
 node --run start:wayland
 ```
-
