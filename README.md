@@ -53,33 +53,31 @@ jarvis/
 
 ## 🚀 Getting Started
 
+If Node.js not installed, you can use the NodeSource repo (works great on Raspberry Pi OS/Debian 12)
+```bash
+# Add NodeSource repo for Node 22.x and install
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+sudo apt install -y nodejs
+
+# Verify versions as MagicMirror v2.33.0 needs Node v22.18.0
+node -v
+npm -v
+
+```
+
 ### 1) Clone the repo
 ```bash
-git clone https://github.com/<your-org>/jarvis.git
-cd jarvis
+git clone git@github.com:AngelG4612/Jarvis.git
+```
+### 2) Install MagicMirror dependencies
+```bash
+# This compiles native deps and pulls Electron, can take a while
+cd jarvis/mirror/MagicMirror
+node --run install-mm
+```
 
-2) Setup Infrastructure (Home Assistant + Mosquitto)
-cd infra
-docker compose up -d
+### 3) (Optional) Start MagicMirror
+```bash
+node --run start:wayland
+```
 
-
-Access Home Assistant at: http://localhost:8123
-
-MQTT broker runs on port 1883 (default).
-
-3) Setup MagicMirror²
-
-On your Raspberry Pi:
-
-# Install MagicMirror² (if not already)
-git clone https://github.com/MichMich/MagicMirror
-cd MagicMirror
-npm install
-
-# Symlink custom module
-ln -s ~/jarvis/mirror/modules/mmm-jarvis-ha ~/MagicMirror/modules/mmm-jarvis-ha
-
-
-Start the mirror:
-
-npm run start
