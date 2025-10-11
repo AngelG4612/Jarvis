@@ -19,24 +19,35 @@ It combines:
 ```
 jarvis/
 ├── app/                     # Flutter mobile app
-│   ├── lib/                 # source code (API clients, models, UI, state)
-│   ├── test/                # unit & widget tests
-│   └── integration_test/    # optional end-to-end tests
+│   └── jarvis/              # Main Flutter project
+│       ├── lib/             # Source code (API clients, models, UI, state)
+│       ├── test/            # Unit & widget tests
+│       ├── android/         # Android platform files
+│       ├── ios/             # iOS platform files
+│       ├── web/             # Web platform files
+│       ├── windows/         # Windows platform files
+│       ├── linux/           # Linux platform files
+│       ├── macos/           # macOS platform files
+│       └── pubspec.yaml     # Flutter dependencies
 │
-├── mirror/                  # MagicMirror modules + config API
-│   ├── modules/
-│   │   └── mmm-jarvis-ha/   # Custom HA integration module
-│   └── services/config-api/ # Node/Express API for layout + brightness
+├── mirror/                  # MagicMirror integration
+│   ├── MagicMirror/         # Complete MagicMirror codebase (integrated)
+│   │   ├── js/              # Core JavaScript files
+│   │   ├── css/             # Styling and themes
+│   │   ├── modules/         # Default and custom modules
+│   │   ├── config/          # Configuration files
+│   │   ├── translations/    # Language files
+│   │   └── package.json     # Node.js dependencies
+│   ├── install.sh           # MagicMirror setup script
+│   └── ReadMe.txt           # Mirror-specific documentation
 │
 ├── infra/                   # Infrastructure configs
-│   ├── docker-compose.yml   # HA + Mosquitto stack
+    ├── docker-compose.yml   # HA + Mosquitto stack
 │   ├── home-assistant/      # HA configs (YAML)
-│   └── mosquitto/           # Broker config + ACLs
+│   ├── mosquitto/           # Broker config + ACLs
+│   └── ReadMe.txt           # Infrastructure documentation
 │
-├── docs/                    # Documentation
-│   └── architecture.md
-│
-└── README.md             
+└── README.md                # Main project documentation
 ```
 
 
@@ -53,33 +64,30 @@ jarvis/
 
 ## 🚀 Getting Started
 
+If Node.js not installed, you can use the NodeSource repo (works great on Raspberry Pi OS/Debian 12)
+```bash
+# Add NodeSource repo for Node 22.x and install
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+sudo apt install -y nodejs
+
+# Verify versions as MagicMirror v2.33.0 needs Node v22.18.0
+node -v
+npm -v
+
+```
+
 ### 1) Clone the repo
 ```bash
-git clone https://github.com/<your-org>/jarvis.git
-cd jarvis
+git clone git@github.com:AngelG4612/Jarvis.git
+```
+### 2) Install MagicMirror dependencies
+```bash
+# This compiles native deps and pulls Electron, can take a while
+cd jarvis/mirror/MagicMirror
+node --run install-mm
+```
 
-2) Setup Infrastructure (Home Assistant + Mosquitto)
-cd infra
-docker compose up -d
-
-
-Access Home Assistant at: http://localhost:8123
-
-MQTT broker runs on port 1883 (default).
-
-3) Setup MagicMirror²
-
-On your Raspberry Pi:
-
-# Install MagicMirror² (if not already)
-git clone https://github.com/MichMich/MagicMirror
-cd MagicMirror
-npm install
-
-# Symlink custom module
-ln -s ~/jarvis/mirror/modules/mmm-jarvis-ha ~/MagicMirror/modules/mmm-jarvis-ha
-
-
-Start the mirror:
-
-npm run start
+### 3) (Optional) Start MagicMirror
+```bash
+node --run start:wayland
+```
