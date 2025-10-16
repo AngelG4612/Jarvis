@@ -1,0 +1,11 @@
+{
+  "name": "MMM-CTA-Bus",
+  "version": "1.0.0",
+  "description": "Custom CTA Bus Tracker module for MagicMirror",
+  "main": "MMM-CTA-Bus.js",
+  "author": "Yessi Nicacio",
+  "license": "MIT",
+  "dependencies": {
+    "node-fetch": "^3.3.2"
+  }
+}

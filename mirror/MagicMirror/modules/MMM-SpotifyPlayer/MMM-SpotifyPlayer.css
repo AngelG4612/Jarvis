@@ -1,0 +1,19 @@
+.spotify-player {
+  text-align: center;
+  color: white;
+  font-family: "Roboto", sans-serif;
+}
+
+.spotify-btn {
+  background: transparent;
+  border: none;
+  font-size: 1.5em;
+  cursor: pointer;
+  color: white;
+  transition: 0.2s;
+}
+
+.spotify-btn:hover {
+  color: #1db954;
+  transform: scale(1.2);
+}
