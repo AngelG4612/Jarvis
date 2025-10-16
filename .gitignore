@@ -1,0 +1,3 @@
+services/home-assistant/secrets.yaml
+services/mosquitto/passwd
+services/home-assistant/.storage/
