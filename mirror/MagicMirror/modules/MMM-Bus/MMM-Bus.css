@@ -1,0 +1,30 @@
+.mmm-bus-wrapper {
+    font-family: "Roboto", sans-serif;
+}
+
+.mmm-bus-wrapper h2 {
+    margin-bottom: 10px;
+    font-size: 20px;
+}
+
+.mmm-bus-wrapper table {
+    border-spacing: 0;
+    width: 100%;
+}
+
+.mmm-bus-wrapper td {
+    padding: 3px 0;
+    line-height: 1.4;
+}
+
+.mmm-bus-wrapper .bright {
+    color: #fff;
+}
+
+.mmm-bus-wrapper .normal {
+    color: #aaa;
+}
+
+.mmm-bus-wrapper .dimmed {
+    color: #666;
+}

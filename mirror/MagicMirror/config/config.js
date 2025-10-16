@@ -116,20 +116,18 @@ let config = {
 },
 
 	// Bus Module
-	{
+{
   module: "MMM-Bus",
   position: "bottom_left",
   config: {
     apiKey: "PpH6hdBcpdUPimEM9qwnw3Rh5",
     stops: [
       { route: "22", stopId: "14787", label: "Clark & Addison" },
-      { route: "8",  stopId: "524",   label: "Halsted & 35th" },
-      { route: "62", stopId: "179",   label: "Archer & Pulaski" }
     ],
-    maxBuses: 2,
     updateInterval: 60000
   }
 },
+
   // Spotify Module
 	{
   module: "MMM-SpotifyPlayer",
