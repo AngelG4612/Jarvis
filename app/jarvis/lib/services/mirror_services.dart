@@ -1,0 +1,1 @@
+// talks to Pi and handles API requests like maybe modules management, system info, etc.

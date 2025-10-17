@@ -1,0 +1,1 @@
+// Holds data like the URL, online/ offline status

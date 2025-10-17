@@ -1,0 +1,1 @@
+// list of Magic mirror modules with toggles to enable/disable them + configure settings

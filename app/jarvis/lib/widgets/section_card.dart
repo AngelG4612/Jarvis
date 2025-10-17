@@ -1,0 +1,1 @@
+// style card with title and content for maybe consistent layout

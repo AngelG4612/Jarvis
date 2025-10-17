@@ -1,0 +1,1 @@
+// lets the user edit IP, API URL and change theme

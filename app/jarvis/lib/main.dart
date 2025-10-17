@@ -1,3 +1,5 @@
+// starts the app
+
 import 'package:flutter/material.dart';
 
 void main() {

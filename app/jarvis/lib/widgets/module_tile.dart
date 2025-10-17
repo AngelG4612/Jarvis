@@ -1,0 +1,1 @@
+// row showing a module with swithch to enable/disable

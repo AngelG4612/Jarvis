@@ -1,0 +1,1 @@
+// shows live preview of mirror display and connection status
