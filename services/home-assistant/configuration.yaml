@@ -1,0 +1,9 @@
+homeassistant:
+  name: Jarvis Home
+  time_zone: America/Chicago
+  unit_system: metric
+  currency: USD
+
+default_config:
+
+automation: !include_dir_merge_list automations
