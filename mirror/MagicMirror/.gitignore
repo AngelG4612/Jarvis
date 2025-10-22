@@ -55,11 +55,17 @@ Temporary Items
 .directory
 .Trash-*
 
-# Ignore all modules except the default modules.
+# Ignore all modules except the default modules and our custom CTA modules.
 /modules/**
 !/modules/default
 !/modules/default/**
 !/modules/README.md**
+!/modules/MMM-Bus
+!/modules/MMM-Bus/**
+!/modules/MMM-Train
+!/modules/MMM-Train/**
+# But still ignore node_modules in any module
+/modules/**/node_modules/
 
 # Ignore changes to the custom css files but keep the sample and main.
 /css/*
@@ -68,9 +74,10 @@ Temporary Items
 !/css/roboto.css
 !/css/font-awesome.css
 
-# Ignore users config file but keep the sample.
-/config/*
-!/config/config.js.sample
+# Allow config files for our project (but you may want to be careful with sensitive data)
+# /config/*
+# !/config/config.js.sample
+!/config/config.js
 
 # Vim
 ## swap
