@@ -1,0 +1,30 @@
+.mmm-train-wrapper {
+    font-family: "Roboto", sans-serif;
+}
+
+.mmm-train-wrapper h2 {
+    margin-bottom: 10px;
+    font-size: 20px;
+}
+
+.mmm-train-wrapper table {
+    border-spacing: 0;
+    width: 100%;
+}
+
+.mmm-train-wrapper td {
+    padding: 3px 0;
+    line-height: 1.4;
+}
+
+.mmm-train-wrapper .bright {
+    color: #fff;
+}
+
+.mmm-train-wrapper .normal {
+    color: #aaa;
+}
+
+.mmm-train-wrapper .dimmed {
+    color: #666;
+}
