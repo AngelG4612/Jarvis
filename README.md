@@ -64,6 +64,12 @@ jarvis/
 
 ## 🚀 Getting Started
 
+Installing curl
+```bash
+sudo apt update
+sudo apt install curl
+```
+
 If Node.js not installed, you can use the NodeSource repo (works great on Raspberry Pi OS/Debian 12)
 ```bash
 # Add NodeSource repo for Node 22.x and install
