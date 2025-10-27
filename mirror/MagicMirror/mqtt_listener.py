@@ -4,13 +4,13 @@ import request
 
 MIRROR_API = "http://localhost:8080/api"
 
-def on_mesage(client, userdata,msg)
+def on_mesage(client, userdata,msg):
 	topic = msg.topic
 	payload = msg.payload.decode()
 	print(f"Received {payload} on {topic}")
 	
 	if topic == "mirror/display":
-	    os.system(f"vcgencmd display_power {'1' id payload == 'on' else '0'}")
+	    os.system(f"vcgencmd display_power {'1', id payload == 'on' else '0'}")
 	
 	elif topic == "mirror/restart":
 	    request.get(f"{MIRROR_API}/restart")
