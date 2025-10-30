@@ -110,8 +110,8 @@ let config = {
 			config: {
 				clientID: "your_spotify_client_id",
 				clientSecret: "your_spotify_client_secret",
-				accessToken: "your_spotify_access_token",
-				refreshToken: "your_spotify_refresh_token",
+				accessToken: "your_spotify_accessToken",
+				refreshToken: "your_spotify_refreshToken",
 				updateInterval: 5000,
 				showAlbumArt: true,
 				showProgress: true,
