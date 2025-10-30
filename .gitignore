@@ -55,3 +55,14 @@ Thumbs.db
 .env.development.local
 .env.test.local
 .env.production.local
+
+# Home Assistant runtime files (logs, locks, DB files) - do not track these
+# These are created at runtime by Home Assistant and cause merge conflicts.
+services/home-assistant/.ha_run.lock
+services/home-assistant/home-assistant.log*
+services/home-assistant/home-assistant_v2.db*
+services/home-assistant/home-assistant_v2.db-*
+
+# Mosquitto runtime / data (if you store runtime state here)
+services/mosquitto/log/
+services/mosquitto/data/
