@@ -7,3 +7,17 @@ homeassistant:
 default_config:
 
 automation: !include_dir_merge_list automations
+
+# Camera: Generic USB webcam via FFmpeg (v4l2). This assumes the container
+# has access to /dev/video0 (we map it in Docker Compose) and that ffmpeg is
+# available in the Home Assistant image. If ffmpeg is not available in your
+# image, see the README notes or run a mjpg-streamer container and use the
+# Generic MJPEG camera platform instead.
+camera:
+  - platform: ffmpeg
+    name: USB Camera
+    input: -f v4l2 -r 15 -s 1280x720 -i /dev/video0
+  
+  - platform: mjpeg
+    name: USB Camera MJPEG
+    mjpeg_url: http://104.194.122.233:8080/?action=stream

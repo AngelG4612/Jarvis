@@ -7,12 +7,19 @@ services:
     cap_add:
       - NET_ADMIN
       - NET_RAW
+    # Expose the host video device into the container so Home Assistant can access
+    # a USB webcam (e.g. /dev/video0). Adjust the device path if camera is
+    # on a different /dev/videoX node.
+    devices:
+      - /dev/video0:/dev/video0
     volumes:
       - ../../services/home-assistant:/config
       - /etc/localtime:/etc/localtime:ro
       - /run/dbus:/run/dbus:ro   # <-- needed for Bluetooth
     environment:
       - TZ=America/Chicago
+      # Optional: set a variable for convenience inside the container
+      - CAMERA_DEVICE=/dev/video0
 
   mosquitto:
     container_name: mosquitto
@@ -24,3 +31,15 @@ services:
     volumes:
       - ../../services/mosquitto:/mosquitto
       - ../../services/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
+
+  mjpg-streamer:
+    build:
+      context: ./mjpg-streamer
+    container_name: mjpg-streamer
+    restart: unless-stopped
+    devices:
+      - /dev/video0:/dev/video0
+    ports:
+      - "8080:8080"
+    command: >-
+      /usr/local/bin/mjpg_streamer -i "/usr/local/lib/input_uvc.so -y -r 1280x720 -f 15" -o "/usr/local/lib/output_http.so -p 8080 -w /usr/local/www"
