@@ -8,7 +8,7 @@ This guide helps set your own Spotify integration for the MagicMirror.
 - Spotify Premium account (required for Web API playback features)
 - Access to Spotify Developer Dashboard
 
-## 🚀 Quick Setup Steps
+## Quick Setup Steps
 
 ### Step 1: Create Your Own Spotify App
 1. Go to [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
@@ -74,7 +74,7 @@ This guide helps set your own Spotify integration for the MagicMirror.
 2. Open `http://localhost:8080` in browser
 3. Play music on Spotify and see it appear on the mirror!
 
-## 🔒 Security Notes
+## Security Notes
 
 **NEVER commit real credentials to git!**
 - Keep your Client ID/Secret private
@@ -82,7 +82,7 @@ This guide helps set your own Spotify integration for the MagicMirror.
 - Each team member needs their own Spotify app
 - The module works with any Spotify Premium account
 
-## 🎛️ Configuration Options
+## Configuration Options
 
 You can customize the module in `config.js`:
 
@@ -95,7 +95,7 @@ You can customize the module in `config.js`:
 | `showVolume` | Show volume percentage | `true` |
 | `maxWidth` | Maximum width of module | `"400px"` |
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 1. **"Invalid client" error**: Check your Client ID/Secret are correct
@@ -107,7 +107,7 @@ You can customize the module in `config.js`:
 - Verify your Spotify app settings match the redirect URI
 - Ensure you're playing music on a Spotify Connect device
 
-## 📋 Files You'll Modify
+## Files You'll Modify
 - `spotify-auth.js` - Add your credentials temporarily for setup
 - `config/config.js` - Add your tokens permanently
 
