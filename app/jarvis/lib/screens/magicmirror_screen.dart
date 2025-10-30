@@ -35,7 +35,7 @@ class _MagicMirrorScreenState extends State<MagicMirrorScreen> {
     final text = connected ? 'Connected' : 'Disconnected';
 
     return Scaffold(
-      appBar: AppBar(title: const Text('MagicMirror Remote')),
+      appBar: AppBar(title: const Text('Jarvis Remote Control')),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(

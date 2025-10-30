@@ -7,7 +7,7 @@ typedef MessageCallback = void Function(String topic, String message);
 class MirrorMQTT {
   static const String DEFAULT_HOST = '10.0.0.70'; // Pi IP
   static const int DEFAULT_PORT = 1883;
-  static const String CLIENT_ID = 'jarvis_flutter_client';
+  static const String CLIENT_ID = 'jarvis_mirror_client';
 
   late final MqttServerClient client;
   final String host;
@@ -55,7 +55,7 @@ class MirrorMQTT {
       await client.connect();
       return true;
     } catch (e) {
-      print('❌ Failed to connect: $e');
+      print('Failed to connect: $e');
       _onDisconnected();
       client.disconnect();
       return false;
@@ -63,7 +63,7 @@ class MirrorMQTT {
   }
 
   void _onConnected() {
-    print('✅ Connected to MQTT broker at $host:$port');
+    print(' Connected to MQTT broker at $host:$port');
     _isConnected = true;
     onConnectionChanged?.call(true);
 
@@ -72,7 +72,7 @@ class MirrorMQTT {
   }
 
   void _onDisconnected() {
-    print('❌ Disconnected from MQTT broker');
+    print('Disconnected from MQTT broker');
     _isConnected = false;
     onConnectionChanged?.call(false);
   }
@@ -89,7 +89,7 @@ class MirrorMQTT {
 
   void publish(String topic, String message) {
     if (!_isConnected) {
-      print('❌ Not connected to MQTT broker');
+      print('Not connected to MQTT broker');
       return;
     }
 
@@ -98,7 +98,7 @@ class MirrorMQTT {
       client.publishMessage(topic, MqttQos.atLeastOnce, builder.payload!);
       print('✓ Published to $topic: $message');
     } catch (e) {
-      print('❌ Failed to publish: $e');
+      print('Failed to publish: $e');
     }
   }
 
