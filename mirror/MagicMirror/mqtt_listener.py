@@ -1,9 +1,24 @@
+"""
+mqtt_listener.py
+----------------
+Listens for MQTT commands from a Flutter remote-control app and controls
+the MagicMirror and display accordingly.
+
+Supported MQTT topics:
+- mirror/display : "on" or "off"  → turn display on/off
+- mirror/restart : any payload     → restart MagicMirror
+- mirror/module  : "<module>:<action>" → show/hide specific module
+
+Author: Yessi / Jarvis Project
+"""
+
 import paho.mqtt.client as mqtt
 import os
 import requests
 import time
 from typing import Optional
 
+# MagicMirror REST API base URL (MMM-Remote-Control)
 MIRROR_API = "http://localhost:8080/api"
 MQTT_BROKER = "localhost"
 MQTT_PORT = 1883
