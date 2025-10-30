@@ -1,0 +1,12 @@
+{
+  "name": "mmm-homeassistant",
+  "version": "1.0.0",
+  "description": "MagicMirror² module to display Home Assistant entities via WebSocket (with REST fallback)",
+  "main": "MMM-HomeAssistant.js",
+  "author": "Angel / JARVIS",
+  "license": "MIT",
+  "dependencies": {
+    "ws": "^8.18.0",
+    "node-fetch": "^3.3.2"
+  }
+}

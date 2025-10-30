@@ -1,7 +1,7 @@
 homeassistant:
   name: Jarvis Home
   time_zone: America/Chicago
-  unit_system: metric
+  unit_system: imperial
   currency: USD
 
 default_config:
