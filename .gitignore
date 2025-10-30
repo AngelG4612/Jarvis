@@ -1,6 +1,7 @@
 services/home-assistant/secrets.yaml
 services/mosquitto/passwd
 services/home-assistant/.storage/
+
 # Node.js dependencies
 node_modules/
 **/node_modules/

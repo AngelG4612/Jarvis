@@ -55,15 +55,21 @@ Temporary Items
 .directory
 .Trash-*
 
+
+# TODO: FIX ALL GITIGNORE!!!
 # Ignore all modules except the default modules and our custom CTA modules.
-/modules/**
-!/modules/default
-!/modules/default/**
-!/modules/README.md**
-!/modules/MMM-Bus
-!/modules/MMM-Bus/**
-!/modules/MMM-Train
-!/modules/MMM-Train/**
+# /modules/**
+# !/modules/default
+# !/modules/default/**
+# !/modules/README.md**
+# !/modules/MMM-Bus
+# !/modules/MMM-Bus/**
+# !/modules/MMM-Train
+# !/modules/MMM-Train/**
+/modules/MMM-HomeAssistant/node_modules/**
+
+
+
 # But still ignore node_modules in any module
 /modules/**/node_modules/
 
