@@ -1,0 +1,10 @@
+.mmm-ha { padding: 8px 12px; }
+.mmm-ha-title { font-size: 18px; font-weight: 600; margin-bottom: 6px; }
+.mmm-ha-list { display: flex; flex-direction: column; gap: 6px; }
+.mmm-ha-row { display: grid; grid-template-columns: 1fr auto; align-items: center; }
+.mmm-ha-left { display: flex; align-items: center; gap: 8px; }
+.mmm-ha-name { font-weight: 500; }
+.mmm-ha-right { display: flex; align-items: baseline; gap: 10px; }
+.mmm-ha-state { font-variant-numeric: tabular-nums; }
+.mmm-ha-time { opacity: 0.65; font-size: 85%; }
+.mmm-ha-empty { opacity: 0.7; }

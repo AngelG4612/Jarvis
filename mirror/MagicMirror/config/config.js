@@ -14,28 +14,30 @@ let config = {
 							// - another specific IPv4/6 to listen on a specific interface
 							// - "0.0.0.0", "::" to listen on any interface
 							// Default, when address config is left out or empty, is "localhost"
+							
 	port: 8080,
 	basePath: "/",	// The URL path where MagicMirror² is hosted. If you are using a Reverse proxy
-									// you must set the sub path here. basePath must end with a /
-	ipWhitelist: ["127.0.0.1", "::ffff:127.0.0.1", "::1"],	// Set [] to allow all IP addresses
-									// or add a specific IPv4 of 192.168.1.5 :
-									// ["127.0.0.1", "::ffff:127.0.0.1", "::1", "::ffff:192.168.1.5"],
-									// or IPv4 range of 192.168.3.0 --> 192.168.3.15 use CIDR format :
-									// ["127.0.0.1", "::ffff:127.0.0.1", "::1", "::ffff:192.168.3.0/28"],
+					// you must set the sub path here. basePath must end with a /
 
-	useHttps: false,			// Support HTTPS or not, default "false" will use HTTP
+	ipWhitelist: ["127.0.0.1", "::ffff:127.0.0.1", "::1"],	// Set [] to allow all IP addresses
+															// or add a specific IPv4 of 192.168.1.5 :
+															// ["127.0.0.1", "::ffff:127.0.0.1", "::1", "::ffff:192.168.1.5"],
+															// or IPv4 range of 192.168.3.0 --> 192.168.3.15 use CIDR format :
+															// ["127.0.0.1", "::ffff:127.0.0.1", "::1", "::ffff:192.168.3.0/28"],
+
+	useHttps: false,		// Support HTTPS or not, default "false" will use HTTP
 	httpsPrivateKey: "",	// HTTPS private key path, only require when useHttps is true
 	httpsCertificate: "",	// HTTPS Certificate path, only require when useHttps is true
 
 	language: "en",
 	locale: "en-US",   // this variable is provided as a consistent location
-			   // it is currently only used by 3rd party modules. no MagicMirror code uses this value
-			   // as we have no usage, we  have no constraints on what this field holds
-			   // see https://en.wikipedia.org/wiki/Locale_(computer_software) for the possibilities
+						// it is currently only used by 3rd party modules. no MagicMirror code uses this value
+						// as we have no usage, we  have no constraints on what this field holds
+						// see https://en.wikipedia.org/wiki/Locale_(computer_software) for the possibilities
 
 	logLevel: ["INFO", "LOG", "WARN", "ERROR"], // Add "DEBUG" for even more logging
-	timeFormat: 24,
-	units: "metric",
+	timeFormat: 12,
+	units: "imperial",
 
 	modules: [
 		{
@@ -104,42 +106,64 @@ let config = {
 				broadcastNewsUpdates: true
 			}
 		},
-	// Train Module
+		// Train Module
 		{
-  module: "MMM-Train",
-  position: "top_left",
-  config: {
-    apiKey: "96e4819f989647a09bd6eb70cb2367d0",
-    stationId: "40380", // Sox–35th (Red Line)
-    maxTrains: 4
-  }
-},
+			module: "MMM-Train",
+			position: "top_left",
+			config: {
+				apiKey: "96e4819f989647a09bd6eb70cb2367d0",
+				stationId: "40380", // Sox–35th (Red Line)
+				maxTrains: 4
+			}
+		},
 
-	// Bus Module
-{
-  module: "MMM-Bus",
-  position: "bottom_left",
-  config: {
-    apiKey: "PpH6hdBcpdUPimEM9qwnw3Rh5",
-    stops: [
-      { route: "22", stopId: "14787", label: "Clark & Addison" },
-    ],
-    updateInterval: 60000
-  }
-},
+		// Bus Module
+		{
+			module: "MMM-Bus",
+			position: "bottom_left",
+			config: {
+				apiKey: "PpH6hdBcpdUPimEM9qwnw3Rh5",
+				stops: [
+					{ route: "22", stopId: "14787", label: "Clark & Addison" },
+				],
+				updateInterval: 60000
+			}
+		},
 
-  // Spotify Module
-	{
-  module: "MMM-SpotifyPlayer",
-  position: "bottom_center",
-  config: {
-    clientID: "1b2d164490694787b51c76160b9ad58e", //replace with your own
-    clientSecret: "92b5fa4a61114548a7c7bc6674a7f794", //replace with your own
-    accessToken: "YOUR_ACCESS_TOKEN",
-    refreshToken: "YOUR_REFRESH_TOKEN",
-    updateInterval: 5000
-  }
-}
+		// Spotify Module
+		{
+			module: "MMM-SpotifyPlayer",
+			position: "bottom_center",
+			config: {
+				clientID: "1b2d164490694787b51c76160b9ad58e", //replace with your own
+				clientSecret: "92b5fa4a61114548a7c7bc6674a7f794", //replace with your own
+				accessToken: "YOUR_ACCESS_TOKEN",
+				refreshToken: "YOUR_REFRESH_TOKEN",
+				updateInterval: 5000
+			}
+		},
+
+		// Home Assistant Module
+		{
+			module: "MMM-HomeAssistant",
+			position: "top_left",
+			config: {
+				title: "Home Status",
+				baseUrl: HA_BASE_URL, // or your HA URL
+				token: HA_TOKEN, // your long-lived access token stored in secrets.yaml
+				useWebSocket: true,
+				restPollSeconds: 15,
+				showLastChanged: true,
+				entities: [
+					{ id: "light.master_bedroom_main_lights", name: "Master Bedroom Lights", icon: "fa-lightbulb" }
+					// { id: "light.living_room", name: "Living Room Light", icon: "fa-lightbulb" },
+					// { id: "switch.coffee_maker", name: "Coffee Maker", icon: "fa-mug-hot" }
+				]
+			}
+		}
+
+
+
 
 
 	]
