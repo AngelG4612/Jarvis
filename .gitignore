@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 services/home-assistant/secrets.yaml
 services/mosquitto/passwd
 services/home-assistant/.storage/
@@ -5,10 +6,15 @@ services/home-assistant/.storage/
 # Node.js dependencies
 node_modules/
 **/node_modules/
+=======
+# Dependencies
+node_modules/
+>>>>>>> origin/spotify-module
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+<<<<<<< HEAD
 # Logs
 *.log
 logs/
@@ -39,6 +45,19 @@ coverage/
 
 # IDE files
 .idea/
+=======
+# Build outputs
+build/
+dist/
+.build/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+>>>>>>> origin/spotify-module
 
 # OS generated files
 .DS_Store
@@ -55,3 +74,22 @@ Thumbs.db
 .env.development.local
 .env.test.local
 .env.production.local
+<<<<<<< HEAD
+=======
+
+# Logs
+*.log
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# Temporary folders
+tmp/
+temp/
+>>>>>>> origin/spotify-module
