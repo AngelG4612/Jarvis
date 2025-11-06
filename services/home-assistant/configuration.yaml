@@ -1,9 +1,11 @@
 homeassistant:
   name: Jarvis Home
   time_zone: America/Chicago
-  unit_system: imperial
+  unit_system: US customary 
   currency: USD
 
 default_config:
+# Example configuration.yaml entry
+assist_pipeline:
 
 automation: !include_dir_merge_list automations

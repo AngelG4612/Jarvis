@@ -1,9 +1,15 @@
+networks:
+  ha-net:
+    driver: bridge
+
 services:
   homeassistant:
     container_name: homeassistant
     image: ghcr.io/home-assistant/home-assistant:stable
     restart: unless-stopped
     network_mode: host
+    # networks:
+    #   - ha-net
     cap_add:
       - NET_ADMIN
       - NET_RAW
@@ -13,6 +19,82 @@ services:
       - /run/dbus:/run/dbus:ro   # <-- needed for Bluetooth
     environment:
       - TZ=America/Chicago
+    ports:
+      - "8123:8123"
+
+  wyoming-piper:
+    image: rhasspy/wyoming-piper:latest
+    # if --help didn't show --uri, try: image: rhasspy/wyoming-piper:1.4.0
+    container_name: wyoming-piper
+    network_mode: host
+    command: ["--uri","tcp://0.0.0.0:10200","--voice","en_US-lessac-medium","--data-dir","/data"]
+    volumes:
+      - ./voice/piper:/data
+    restart: unless-stopped
+
+  wyoming-whisper:
+    image: rhasspy/wyoming-whisper:latest
+    # if --help didn't show --uri, try: image: rhasspy/wyoming-whisper:1.4.0
+    container_name: wyoming-whisper
+    network_mode: host
+    command: ["--uri","tcp://0.0.0.0:10300","--model","small","--language","en","--data-dir","/data"]
+    volumes:
+      - ./voice/whisper:/data
+    restart: unless-stopped
+
+  wyoming-openwakeword:
+    image: rhasspy/wyoming-openwakeword:latest
+    container_name: wyoming-openwakeword
+    network_mode: host
+    command: ["--uri","tcp://0.0.0.0:10400","--preload-model","ok_nabu","--preload-model","hey_jarvis"]
+    restart: unless-stopped
+
+
+  
+    
+  # Rhasspy Wyoming Containers for TTS, STT, and Wake Word Detection (Voice Assistant)
+  # wyoming-piper:
+  #   image: rhasspy/wyoming-piper:latest
+  #   container_name: wyoming-piper
+  #   # Removed --host/--port (not accepted by this image). Docker port mapping will expose the service.
+  #   # Expose a TCP endpoint so Home Assistant (and the host) can connect.
+  #   # Use --uri tcp://0.0.0.0:<port> to bind to all interfaces inside the container.
+  #   command: ["--uri","tcp://0.0.0.0:10200","--voice","en_US-lessac-medium","--data-dir","/data"]
+  #   volumes:
+  #     - ./voice/piper:/data
+  #   ports: ["10200:10200"]
+  #   restart: unless-stopped
+  #   networks: [ha-net]
+
+  # wyoming-whisper:
+  #   image: rhasspy/wyoming-whisper:latest
+  #   container_name: wyoming-whisper
+  #   # models: tiny-int8, base, small, medium, large-v3
+  #   # Removed --host/--port (not accepted by this image). Docker port mapping will expose the service.
+  #   # Expose a TCP endpoint for Whisper; bind to 0.0.0.0 so published ports work.
+  #   command: ["--uri","tcp://0.0.0.0:10300","--model","small","--language","en","--data-dir","/data"]
+  #   volumes:
+  #     - ./voice/whisper:/data
+  #   ports: ["10300:10300"]
+  #   restart: unless-stopped
+  #   networks: [ha-net]
+
+  # wyoming-openwakeword:
+  #   image: rhasspy/wyoming-openwakeword:latest
+  #   container_name: wyoming-openwakeword
+  #   # Removed --host/--port (not accepted by this image). Docker port mapping will expose the service.
+  #   # Expose a TCP endpoint for openWakeWord and preload models.
+  #   command: ["--uri","tcp://0.0.0.0:10400","--preload-model","ok_nabu","--preload-model","hey_jarvis"]
+  #   ports: ["10400:10400"]
+  #   restart: unless-stopped
+  #   networks: [ha-net]
+
+  # # one-off connectivity tester (run when needed)
+  # netcheck:
+  #   image: alpine:3.20
+  #   command: sh -c "apk add --no-cache netcat-openbsd >/dev/null && nc -vz wyoming-piper 10200 && nc -vz wyoming-whisper 10300 && nc -vz wyoming-openwakeword 10400"
+  #   depends_on: [wyoming-piper, wyoming-whisper, wyoming-openwakeword]
+  #   networks: [ha-net]
 
   mosquitto:
     container_name: mosquitto
@@ -24,3 +106,4 @@ services:
     volumes:
       - ../../services/mosquitto:/mosquitto
       - ../../services/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
+
