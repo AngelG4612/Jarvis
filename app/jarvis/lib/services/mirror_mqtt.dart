@@ -1,90 +1,83 @@
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
 
-typedef ConnectionCallback = void Function(bool connected);
 typedef MessageCallback = void Function(String topic, String message);
 
 class MirrorMQTT {
-  static const String DEFAULT_HOST = '10.0.0.70'; // Pi IP
-  static const int DEFAULT_PORT = 1883;
-  static const String CLIENT_ID = 'jarvis_mirror_client';
+  late MqttServerClient client;
+  final String broker = 'localhost';
+  final int port = 1883;
+  final String clientId =
+      'flutter-jarvis-${DateTime.now().millisecondsSinceEpoch}';
 
-  late final MqttServerClient client;
-  final String host;
-  final int port;
   bool _isConnected = false;
-
-  ConnectionCallback? onConnectionChanged;
   MessageCallback? onMessageReceived;
 
-  bool get isConnected => _isConnected;
-
-  MirrorMQTT({
-    this.host = DEFAULT_HOST,
-    this.port = DEFAULT_PORT,
-    this.onConnectionChanged,
-    this.onMessageReceived,
-  }) {
-    client = MqttServerClient(host, CLIENT_ID);
+  MirrorMQTT() {
+    _initializeClient();
   }
 
-  Future<bool> connect() async {
-    if (_isConnected) {
-      print('Already connected to MQTT broker');
-      return true;
-    }
+  void _initializeClient() {
+    client = MqttServerClient(broker, clientId)
+      ..port = port
+      ..keepAlivePeriod = 20
+      ..onDisconnected = _onDisconnected
+      ..onConnected = _onConnected
+      ..onSubscribed = _onSubscribed;
+  }
 
-    client.port = port;
-    client.keepAlivePeriod = 30;
-    client.onConnected = _onConnected;
-    client.onDisconnected = _onDisconnected;
-    client.onSubscribed = _onSubscribed;
-
-    // Set up message handling
-    client.updates?.listen((List<MqttReceivedMessage<MqttMessage>> messages) {
-      for (var msg in messages) {
-        final recMess = msg.payload as MqttPublishMessage;
-        final message = MqttPublishPayload.bytesToStringAsString(
-          recMess.payload.message,
-        );
-        onMessageReceived?.call(msg.topic, message);
-      }
-    });
-
+  Future<void> connect() async {
     try {
-      await client.connect();
-      return true;
+      print('Connecting to MQTT broker at $broker:$port...');
+      // Set a timeout for connection attempts
+      await client.connect().timeout(
+        const Duration(seconds: 5),
+        onTimeout: () {
+          throw Exception('MQTT connection timeout after 5 seconds');
+        },
+      );
+      _isConnected = true;
+      _subscribeToTopics();
     } catch (e) {
-      print('Failed to connect: $e');
-      _onDisconnected();
-      client.disconnect();
-      return false;
+      print('Connection to MQTT broker failed: $e');
+      _isConnected = false;
+      rethrow;
     }
+  }
+
+  void _subscribeToTopics() {
+    // Subscribe to sensor data
+    client.subscribe('mirror/sensors', MqttQos.atLeastOnce);
+    // Subscribe to device status
+    client.subscribe('mirror/devices/#', MqttQos.atLeastOnce);
+    // Subscribe to module updates
+    client.subscribe('mirror/modules/#', MqttQos.atLeastOnce);
   }
 
   void _onConnected() {
-    print(' Connected to MQTT broker at $host:$port');
+    print('Connected to MQTT broker');
     _isConnected = true;
-    onConnectionChanged?.call(true);
 
-    // Subscribe to mirror status topics
-    subscribe('mirror/status/#');
+    // Listen for incoming messages
+    client.updates!.listen((List<MqttReceivedMessage<MqttMessage>> c) {
+      for (final recMess in c) {
+        final recTopic = recMess.topic;
+        final recPayload = recMess.payload as MqttPublishMessage;
+        final message = String.fromCharCodes(recPayload.payload.message);
+
+        print('Received message: topic=$recTopic, message=$message');
+        onMessageReceived?.call(recTopic, message);
+      }
+    });
   }
 
   void _onDisconnected() {
     print('Disconnected from MQTT broker');
     _isConnected = false;
-    onConnectionChanged?.call(false);
   }
 
   void _onSubscribed(String topic) {
-    print('✓ Subscribed to $topic');
-  }
-
-  void subscribe(String topic) {
-    if (_isConnected) {
-      client.subscribe(topic, MqttQos.atLeastOnce);
-    }
+    print('Subscribed to topic: $topic');
   }
 
   void publish(String topic, String message) {
@@ -93,32 +86,16 @@ class MirrorMQTT {
       return;
     }
 
-    try {
-      final builder = MqttClientPayloadBuilder()..addString(message);
-      client.publishMessage(topic, MqttQos.atLeastOnce, builder.payload!);
-      print('✓ Published to $topic: $message');
-    } catch (e) {
-      print('Failed to publish: $e');
-    }
-  }
-
-  // Mirror-specific control methods
-  void setDisplayPower(bool on) {
-    publish('mirror/display', on ? 'on' : 'off');
-  }
-
-  void controlModule(String moduleName, String action) {
-    publish('mirror/module', '$moduleName:$action');
-  }
-
-  void restartMirror() {
-    publish('mirror/restart', '');
+    final builder = MqttClientPayloadBuilder();
+    builder.addString(message);
+    client.publishMessage(topic, MqttQos.atLeastOnce, builder.payload!);
+    print('Published message to $topic: $message');
   }
 
   void disconnect() {
-    if (_isConnected) {
-      client.disconnect();
-      _isConnected = false;
-    }
+    client.disconnect();
+    _isConnected = false;
   }
+
+  bool get isConnected => _isConnected;
 }

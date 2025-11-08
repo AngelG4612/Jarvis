@@ -15,12 +15,15 @@ class _MagicMirrorScreenState extends State<MagicMirrorScreen> {
   @override
   void initState() {
     super.initState();
-    mirror = MirrorMQTT(
-      onConnectionChanged: (status) {
-        setState(() => connected = status);
-      },
-    );
-    mirror.connect();
+    mirror = MirrorMQTT();
+    mirror
+        .connect()
+        .then((_) {
+          setState(() => connected = true);
+        })
+        .catchError((_) {
+          setState(() => connected = false);
+        });
   }
 
   @override
@@ -35,41 +38,92 @@ class _MagicMirrorScreenState extends State<MagicMirrorScreen> {
     final text = connected ? 'Connected' : 'Disconnected';
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Jarvis Remote Control')),
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        title: const Text(
+          'Jarvis Screen',
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Colors.black,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(connected ? Icons.wifi : Icons.wifi_off, color: color),
-                const SizedBox(width: 8),
-                Text(text, style: TextStyle(color: color, fontSize: 18)),
-              ],
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: connected
-                  ? () => mirror.publish('mirror/display', 'on')
-                  : null,
-              child: const Text('Display ON'),
-            ),
-            ElevatedButton(
-              onPressed: connected
-                  ? () => mirror.publish('mirror/display', 'off')
-                  : null,
-              child: const Text('Display OFF'),
-            ),
-            ElevatedButton(
-              onPressed: connected
-                  ? () => mirror.publish('mirror/restart', '')
-                  : null,
-              child: const Text('Restart Mirror'),
-            ),
-          ],
-        ),
+        child: connected
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.wifi, color: color),
+                      const SizedBox(width: 8),
+                      Text(text, style: TextStyle(color: color, fontSize: 18)),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: () => mirror.publish('mirror/display', 'on'),
+                    child: const Text('Display ON'),
+                  ),
+                  const SizedBox(height: 12),
+                  ElevatedButton(
+                    onPressed: () => mirror.publish('mirror/display', 'off'),
+                    child: const Text('Display OFF'),
+                  ),
+                  const SizedBox(height: 12),
+                  ElevatedButton(
+                    onPressed: () => mirror.publish('mirror/restart', ''),
+                    child: const Text('Restart Mirror'),
+                  ),
+                ],
+              )
+            : Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Jarvis Logo
+                  Image.asset(
+                    'assets/images/Jarvis logo.png',
+                    width: 200,
+                    height: 200,
+                    fit: BoxFit.contain,
+                  ),
+                  const SizedBox(height: 30),
+                  Text(
+                    'J.A.R.V.I.S.',
+                    style: TextStyle(
+                      color: Colors.purpleAccent,
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                  const SizedBox(height: 15),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.wifi_off, color: color, size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        text,
+                        style: TextStyle(
+                          color: color,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  const Text(
+                    'Attempting to connect to Jarvis Mirror...',
+                    style: TextStyle(
+                      color: Colors.white54,
+                      fontSize: 14,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
+              ),
       ),
     );
   }
