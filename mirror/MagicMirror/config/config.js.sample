@@ -104,6 +104,18 @@ let config = {
 				broadcastNewsUpdates: true
 			}
 		},
+		{
+  			module: "MMM-Spotify",
+  			position: "bottom_left",
+  			config: {
+    		deviceDisplayName: "Jarvis Mirror",  // same as spotifyd.conf
+    		clientID: "<your_spotify_client_id>",
+    		clientSecret: "<your_spotify_client_secret>",
+    		accessToken: "<your_access_token>",
+    		refreshToken: "<your_refresh_token>"
+  			}
+		}
+
 	]
 };
 
