@@ -42,12 +42,27 @@ services:
       - ./voice/whisper:/data
     restart: unless-stopped
 
+  # wyoming-openwakeword:
+  #   image: rhasspy/wyoming-openwakeword:latest
+  #   container_name: wyoming-openwakeword
+  #   network_mode: host
+  #   command: ["--uri","tcp://0.0.0.0:10400","--preload-model","ok_nabu","--preload-model","hey_jarvis"]
+  #   restart: unless-stopped
+
   wyoming-openwakeword:
     image: rhasspy/wyoming-openwakeword:latest
     container_name: wyoming-openwakeword
     network_mode: host
-    command: ["--uri","tcp://0.0.0.0:10400","--preload-model","ok_nabu","--preload-model","hey_jarvis"]
+    command:
+      [
+        "--uri","tcp://0.0.0.0:10400",
+        "--preload-model","ok_nabu",
+        "--preload-model","hey_jarvis",
+        "--threshold","0.5",       # lower = more sensitive (try 0.4–0.6)
+        "--debug"                  # prints scores/detections
+      ]
     restart: unless-stopped
+
 
 
   
