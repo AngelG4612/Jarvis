@@ -5,7 +5,7 @@ typedef MessageCallback = void Function(String topic, String message);
 
 class MirrorMQTT {
   late MqttServerClient client;
-  final String broker = 'localhost';
+  final String broker = '10.0.0.64';
   final int port = 1883;
   final String clientId =
       'flutter-jarvis-${DateTime.now().millisecondsSinceEpoch}';

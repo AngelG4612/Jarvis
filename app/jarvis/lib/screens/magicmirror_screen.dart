@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 import '../services/mirror_mqtt.dart';
 
 class MagicMirrorScreen extends StatefulWidget {
@@ -10,20 +11,67 @@ class MagicMirrorScreen extends StatefulWidget {
 
 class _MagicMirrorScreenState extends State<MagicMirrorScreen> {
   late MirrorMQTT mirror;
+  late WebViewController webViewController;
   bool connected = false;
+  bool isLoading = false;
+  String? errorMessage;
+
+  static const String mirrorUrl = 'http://10.0.0.64:8080';
 
   @override
   void initState() {
     super.initState();
     mirror = MirrorMQTT();
-    mirror
-        .connect()
-        .then((_) {
-          setState(() => connected = true);
-        })
-        .catchError((_) {
-          setState(() => connected = false);
-        });
+    _connectToMQTT();
+    _initializeWebView();
+  }
+
+  void _initializeWebView() {
+    webViewController = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onPageStarted: (String url) {
+            setState(() => isLoading = true);
+          },
+          onPageFinished: (String url) {
+            setState(() {
+              isLoading = false;
+              errorMessage = null;
+            });
+          },
+
+          // FIXED: older WebView versions do NOT have error.url
+          onHttpError: (HttpResponseError error) {
+            final failingUrl = error.request?.uri.toString();
+
+            if (failingUrl == mirrorUrl) {
+              setState(() {
+                errorMessage =
+                    'HTTP Error: ${error.response?.statusCode}\nURL: $failingUrl';
+              });
+            }
+          },
+
+          onWebResourceError: (WebResourceError error) {
+            // cannot check URL in older versions, so ignore harmless module errors
+            if (isLoading) return;
+
+            setState(() {
+              errorMessage = 'Web Error: ${error.description}';
+            });
+          },
+        ),
+      )
+      ..loadRequest(Uri.parse(mirrorUrl));
+  }
+
+  void _connectToMQTT() {
+    mirror.connect().then((_) {
+      setState(() => connected = true);
+    }).catchError((_) {
+      setState(() => connected = false);
+    });
   }
 
   @override
@@ -40,80 +88,86 @@ class _MagicMirrorScreenState extends State<MagicMirrorScreen> {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text(
-          'Jarvis Screen',
-          style: TextStyle(color: Colors.white),
-        ),
         backgroundColor: Colors.black,
+        title:
+            const Text('Jarvis Screen', style: TextStyle(color: Colors.white)),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: connected
-            ? Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.wifi, color: color),
-                      const SizedBox(width: 8),
-                      Text(text, style: TextStyle(color: color, fontSize: 18)),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton(
-                    onPressed: () => mirror.publish('mirror/display', 'on'),
-                    child: const Text('Display ON'),
-                  ),
-                  const SizedBox(height: 12),
-                  ElevatedButton(
-                    onPressed: () => mirror.publish('mirror/display', 'off'),
-                    child: const Text('Display OFF'),
-                  ),
-                  const SizedBox(height: 12),
-                  ElevatedButton(
-                    onPressed: () => mirror.publish('mirror/restart', ''),
-                    child: const Text('Restart Mirror'),
-                  ),
-                ],
-              )
-            : Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Jarvis Logo
-                  Image.asset(
-                    'assets/images/possible_JarvisLogo.png',
-                    width: 200,
-                    height: 200,
-                    fit: BoxFit.contain,
-                  ),  
-                  const SizedBox(height: 15),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.wifi_off, color: color, size: 20),
-                      const SizedBox(width: 8),
-                      Text(
-                        text,
-                        style: TextStyle(
-                          color: color,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  const Text(
-                    'Attempting to connect to Jarvis Mirror...',
-                    style: TextStyle(
-                      color: Colors.white54,
-                      fontSize: 14,
-                      fontStyle: FontStyle.italic,
+      body: Stack(
+        children: [
+          WebViewWidget(controller: webViewController),
+
+          if (isLoading)
+            Center(
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.black87,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircularProgressIndicator(color: Colors.green),
+                    SizedBox(height: 12),
+                    Text('Loading MagicMirror...',
+                        style: TextStyle(color: Colors.white)),
+                  ],
+                ),
+              ),
+            ),
+
+          if (errorMessage != null && !isLoading)
+            Center(
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                margin: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade900,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.error, color: Colors.white, size: 48),
+                    const SizedBox(height: 12),
+                    Text(errorMessage!,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Colors.white)),
+                    const SizedBox(height: 12),
+                    ElevatedButton(
+                      onPressed: () {
+                        setState(() => errorMessage = null);
+                        webViewController.reload();
+                      },
+                      child: const Text('Retry'),
                     ),
-                  ),
+                  ],
+                ),
+              ),
+            ),
+
+          Positioned(
+            top: 12,
+            right: 16,
+            child: Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.black87,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: color, width: 1),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.circle, color: color, size: 10),
+                  const SizedBox(width: 6),
+                  Text(text, style: TextStyle(color: color, fontSize: 12)),
                 ],
               ),
+            ),
+          ),
+        ],
       ),
     );
   }
