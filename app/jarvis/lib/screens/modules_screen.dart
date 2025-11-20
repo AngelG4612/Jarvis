@@ -39,7 +39,10 @@ class _ModulesScreenState extends State<ModulesScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.grey[900],
-        title: const Text('Add New Module', style: TextStyle(color: Colors.white)),
+        title: const Text(
+          'Add New Module',
+          style: TextStyle(color: Colors.white),
+        ),
         content: TextField(
           controller: controller,
           style: const TextStyle(color: Colors.white),
@@ -51,7 +54,10 @@ class _ModulesScreenState extends State<ModulesScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(color: Colors.redAccent)),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Colors.redAccent),
+            ),
           ),
           TextButton(
             onPressed: () {
@@ -61,7 +67,10 @@ class _ModulesScreenState extends State<ModulesScreen> {
                 Navigator.pop(context);
               }
             },
-            child: const Text('Add', style: TextStyle(color: Colors.greenAccent)),
+            child: const Text(
+              'Add',
+              style: TextStyle(color: Colors.greenAccent),
+            ),
           ),
         ],
       ),
@@ -90,13 +99,18 @@ class _ModulesScreenState extends State<ModulesScreen> {
           return Card(
             color: Colors.white10,
             margin: const EdgeInsets.symmetric(vertical: 8),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
+            ),
             child: SwitchListTile(
               activeColor: Colors.greenAccent,
               inactiveThumbColor: Colors.grey,
               value: enabled,
               onChanged: (val) => _toggleModule(name, val),
-              title: Text(name, style: const TextStyle(color: Colors.white, fontSize: 18)),
+              title: Text(
+                name,
+                style: const TextStyle(color: Colors.white, fontSize: 18),
+              ),
               subtitle: Text(
                 enabled ? 'Enabled' : 'Disabled',
                 style: TextStyle(

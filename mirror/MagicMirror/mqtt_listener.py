@@ -9,6 +9,10 @@ Topics:
 - mirror/restart : any payload
 - mirror/module  : "clock:show", "weather:hide", etc.
 
+Note: Module control requires either:
+1. MMM-Remote-Control module installed, OR
+2. A custom module listening to MQTT notifications
+
 Author: Yessi / Jarvis Project
 """
 
@@ -16,6 +20,8 @@ import paho.mqtt.client as mqtt
 import os
 import requests
 import time
+import subprocess
+import json
 
 # MagicMirror settings
 MIRROR_DIR = "/home/jarvis/Jarvis/mirror/MagicMirror"
@@ -80,7 +86,7 @@ def on_message(client, userdata, msg):
             start_magic_mirror()
 
         # ----------------------------------------------------------
-        # MODULE CONTROL via REST API (MMM-Remote-Control)
+        # MODULE CONTROL (handled by MMM-MQTTController)
         # ----------------------------------------------------------
         elif topic == "mirror/module":
             try:
@@ -90,26 +96,18 @@ def on_message(client, userdata, msg):
                 
                 module, action = parts
                 module = module.strip()
-                action = action.strip()
+                action = action.strip().lower()
                 
-                print(f"Module command: {module} -> {action}")
+                if action not in ["show", "hide"]:
+                    raise ValueError(f"Unknown action '{action}'. Use 'show' or 'hide'")
 
-                # Call MMM-Remote-Control API
-                # Format: http://localhost:8080/api/module/moduleName/action
-                url = f"{MIRROR_API}/module/{module}/{action}"
-                print(f"Calling API: {url}")
-                
-                response = requests.get(url, timeout=5)
-                print(f"API Response: {response.status_code} - {response.text}")
-                response.raise_for_status()
+                print(f"✓ Module command: {module} -> {action}")
+                print(f"  (Forwarded to MMM-MQTTController for processing)")
 
             except ValueError as e:
-                print(f"Invalid module payload: {e}")
-            except requests.exceptions.ConnectionError as e:
-                print(f"Cannot connect to MagicMirror API at {MIRROR_API}: {e}")
-                print("Make sure MagicMirror is running and MMM-Remote-Control is enabled")
-            except requests.RequestException as e:
-                print(f"Module control error: {e}")
+                print(f"✗ Invalid module payload: {e}")
+            except Exception as e:
+                print(f"✗ Module control error: {e}")
 
     except Exception as e:
         print(f"Error handling message: {e}")
