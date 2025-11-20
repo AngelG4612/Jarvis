@@ -133,12 +133,12 @@ let config = {
 		// Spotify Module (original)
 		{
 			module: "MMM-SpotifyPlayer",
-			position: "bottom_center",
+			position: "top_center",
 			config: {
-				clientID: "1b2d164490694787b51c76160b9ad58e",
-				clientSecret: "92b5fa4a61114548a7c7bc6674a7f794",
-				accessToken: "YOUR_ACCESS_TOKEN",
-				refreshToken: "YOUR_REFRESH_TOKEN",
+				clientID: "YOUR_CLIENT_ID_HERE",
+				clientSecret: "YOUR_CLIENT_SECRET_HERE",
+				accessToken: "YOUR_ACCESS_TOKEN_HERE",
+				refreshToken: "YOUR_REFRESH_TOKEN_HERE",
 				updateInterval: 5000
 			}
 		},
@@ -153,7 +153,7 @@ let config = {
 				// WRONG_VERSION_NUMBER often means the helper attempted wss but the server answered plain HTTP.
 				// Recommended: set to http://localhost:8123 or set useWebSocket:false to force REST polling.
 				baseUrl: "http://localhost:8123",
-				token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJjMDI5M2Q2MTQxMTY0NWQxYjFhMWYyZDdhZGFkOWE1ZCIsImlhdCI6MTc2MzYxNzAzOCwiZXhwIjoyMDc4OTc3MDM4fQ.B8nNYyLLg4r_r26ekCQTIxBGcTboh99rJRWSMR7dmdo",
+				token: "YOUR_LONG_LIVED_ACCESS_TOKEN_HERE",
 				useWebSocket: true, // set to false to avoid websocket/TLS issues; falls back to REST polling
 				restPollSeconds: 15,
 				showLastChanged: true,
@@ -187,7 +187,7 @@ let config = {
 					select: "Enter",
 					spotify_next: ">",
 					spotify_prev: "<",
-					spotify_pause: " "
+					spotify_pause: "1"
 				}
 			}
 		},
@@ -197,10 +197,10 @@ let config = {
 			module: "MMM-SpotifyControl",
 			position: "bottom_center",
 			config: {
-				clientID: "1b2d164490694787b51c76160b9ad58e",
-				clientSecret: "92b5fa4a61114548a7c7bc6674a7f794",
-				refreshToken: "YOUR_REFRESH_TOKEN",
-				accessToken: null
+				clientID: "YOUR_CLIENT_ID_HERE",
+				clientSecret: "YOUR_CLIENT_SECRET_HERE",
+				refreshToken: "YOUR_REFRESH_TOKEN_HERE",
+				accessToken: "YOUR_ACCESS_TOKEN_HERE"
 			}
 		}
 	]
