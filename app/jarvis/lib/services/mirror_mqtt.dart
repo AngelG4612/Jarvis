@@ -1,5 +1,6 @@
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
+import 'dart:async';
 
 typedef MessageCallback = void Function(String topic, String message);
 
@@ -28,26 +29,41 @@ class MirrorMQTT {
 
   Future<void> connect() async {
     try {
-      print('Connecting to MQTT broker at $broker:$port...');
+      print('═══════════════════════════════════════════');
+      print('🔌 Connecting to MQTT broker at $broker:$port...');
+      print('═══════════════════════════════════════════');
+
       // Set a timeout for connection attempts
       final result = await client.connect().timeout(
         const Duration(seconds: 5),
         onTimeout: () {
-          throw Exception('MQTT connection timeout after 5 seconds');
+          throw TimeoutException(
+            'Connection timeout - broker at $broker:$port not responding after 5 seconds',
+          );
         },
       );
-      print('Connection result: $result');
+      print('✓ Connection result: $result');
 
       // Only set to true if connection was successful
       if (client.connectionStatus?.state == MqttConnectionState.connected) {
         _isConnected = true;
+        print('✓ Successfully connected to MQTT broker!');
         _subscribeToTopics();
       } else {
         _isConnected = false;
-        throw Exception('Failed to establish MQTT connection');
+        final status = client.connectionStatus?.state;
+        throw Exception('Failed to establish connection. Status: $status');
       }
+    } on TimeoutException catch (e) {
+      print(' TIMEOUT ERROR: $e');
+      print('   → Check if Mosquitto is running on $broker:$port');
+      print('   → Check firewall settings (port 1883 must be open)');
+      print('   → Verify the Pi is reachable on your network');
+      _isConnected = false;
+      rethrow;
     } catch (e) {
-      print('Connection to MQTT broker failed: $e');
+      print(' Connection failed: $e');
+      print('   Error type: ${e.runtimeType}');
       _isConnected = false;
       rethrow;
     }
