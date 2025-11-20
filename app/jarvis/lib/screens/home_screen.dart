@@ -23,7 +23,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _screens = [
-      const MagicMirrorScreen(),
+      MagicMirrorScreen(mqtt: widget.mqtt),
       ModulesScreen(mqtt: widget.mqtt),
       SensorsScreen(mqtt: widget.mqtt),
       MusicScreen(mqtt: widget.mqtt),

@@ -3,26 +3,26 @@ import 'package:webview_flutter/webview_flutter.dart';
 import '../services/mirror_mqtt.dart';
 
 class MagicMirrorScreen extends StatefulWidget {
-  const MagicMirrorScreen({super.key});
+  final MirrorMQTT mqtt;
+  const MagicMirrorScreen({super.key, required this.mqtt});
 
   @override
   State<MagicMirrorScreen> createState() => _MagicMirrorScreenState();
 }
 
 class _MagicMirrorScreenState extends State<MagicMirrorScreen> {
-  late MirrorMQTT mirror;
   late WebViewController webViewController;
   bool connected = false;
   bool isLoading = false;
   String? errorMessage;
 
   static const String mirrorUrl = 'http://10.0.0.64:8080';
+  //static const String mirrorUrl = 'http://10.229.241.164:8080';
+  //static const String mirrorUrl = 'http://192.168.137.92:8080';
 
   @override
   void initState() {
     super.initState();
-    mirror = MirrorMQTT();
-    _connectToMQTT();
     _initializeWebView();
   }
 
@@ -66,31 +66,24 @@ class _MagicMirrorScreenState extends State<MagicMirrorScreen> {
       ..loadRequest(Uri.parse(mirrorUrl));
   }
 
-  void _connectToMQTT() {
-    mirror.connect().then((_) {
-      setState(() => connected = true);
-    }).catchError((_) {
-      setState(() => connected = false);
-    });
-  }
-
   @override
   void dispose() {
-    mirror.disconnect();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final color = connected ? Colors.green : Colors.red;
-    final text = connected ? 'Connected' : 'Disconnected';
+    final color = widget.mqtt.isConnected ? Colors.green : Colors.red;
+    final text = widget.mqtt.isConnected ? 'Connected' : 'Disconnected';
 
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
-        title:
-            const Text('Jarvis Screen', style: TextStyle(color: Colors.white)),
+        title: const Text(
+          'Jarvis Screen',
+          style: TextStyle(color: Colors.white),
+        ),
       ),
       body: Stack(
         children: [
@@ -109,8 +102,10 @@ class _MagicMirrorScreenState extends State<MagicMirrorScreen> {
                   children: [
                     CircularProgressIndicator(color: Colors.green),
                     SizedBox(height: 12),
-                    Text('Loading MagicMirror...',
-                        style: TextStyle(color: Colors.white)),
+                    Text(
+                      'Loading MagicMirror...',
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ],
                 ),
               ),
@@ -130,9 +125,11 @@ class _MagicMirrorScreenState extends State<MagicMirrorScreen> {
                   children: [
                     const Icon(Icons.error, color: Colors.white, size: 48),
                     const SizedBox(height: 12),
-                    Text(errorMessage!,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.white)),
+                    Text(
+                      errorMessage!,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.white),
+                    ),
                     const SizedBox(height: 12),
                     ElevatedButton(
                       onPressed: () {
@@ -150,8 +147,7 @@ class _MagicMirrorScreenState extends State<MagicMirrorScreen> {
             top: 12,
             right: 16,
             child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: Colors.black87,
                 borderRadius: BorderRadius.circular(20),

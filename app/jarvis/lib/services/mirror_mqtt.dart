@@ -30,14 +30,22 @@ class MirrorMQTT {
     try {
       print('Connecting to MQTT broker at $broker:$port...');
       // Set a timeout for connection attempts
-      await client.connect().timeout(
+      final result = await client.connect().timeout(
         const Duration(seconds: 5),
         onTimeout: () {
           throw Exception('MQTT connection timeout after 5 seconds');
         },
       );
-      _isConnected = true;
-      _subscribeToTopics();
+      print('Connection result: $result');
+
+      // Only set to true if connection was successful
+      if (client.connectionStatus?.state == MqttConnectionState.connected) {
+        _isConnected = true;
+        _subscribeToTopics();
+      } else {
+        _isConnected = false;
+        throw Exception('Failed to establish MQTT connection');
+      }
     } catch (e) {
       print('Connection to MQTT broker failed: $e');
       _isConnected = false;

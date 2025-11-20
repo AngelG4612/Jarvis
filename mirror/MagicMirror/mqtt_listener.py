@@ -22,7 +22,7 @@ MIRROR_DIR = "/home/jarvis/Jarvis/mirror/MagicMirror"
 MIRROR_API = "http://localhost:8080/api"
 
 # MQTT settings
-MQTT_BROKER = "localhost"
+MQTT_BROKER = os.environ.get("MQTT_BROKER", "10.0.0.64")  # Address of Mosquitto MQTT broker
 MQTT_PORT = 1883
 MQTT_KEEPALIVE = 60
 
