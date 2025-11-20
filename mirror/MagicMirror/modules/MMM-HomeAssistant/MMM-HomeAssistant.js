@@ -25,6 +25,37 @@ Module.register("MMM-HomeAssistant", {
     this.sendSocketNotification("HA_CONFIG", this.config);
   },
 
+  // Compute a simple render key for the configured records (ids, names, icons)
+  _computeRecordsKey(records) {
+    if (!Array.isArray(records)) return '';
+    return records.map(r => `${r.id}::${(r.conf && r.conf.name)||''}::${(r.conf && r.conf.icon)||''}`).join('|');
+  },
+
+  // Build a lightweight records array from current config and states (no DOM creation)
+  _buildRecordsArray() {
+    const cfg = Array.isArray(this.config.entities) ? this.config.entities : [];
+    const confMap = new Map(cfg.map((e) => [e.id, e]));
+
+    const records = [];
+    for (const [id, c] of confMap.entries()) {
+      const s = this.states[id];
+      if (!s) {
+        if (this.config.showUnavailable) {
+          records.push({ id, conf: c, state: { state: "unavailable", attributes: {}, last_changed: null } });
+        }
+        continue;
+      }
+      records.push({ id, conf: c, state: s });
+    }
+
+    if (this.config.sortBy === "state") {
+      records.sort((a, b) => String(a.state.state).localeCompare(String(b.state.state)));
+    } else {
+      records.sort((a, b) => String(a.conf.name || a.id).localeCompare(String(b.conf.name || b.id)));
+    }
+    return records;
+  },
+
   getStyles() {
     // MagicMirror provides Font Awesome globally as 'font-awesome.css'
     return [this.file("styles.css"), "font-awesome.css"];
@@ -148,9 +179,23 @@ Module.register("MMM-HomeAssistant", {
     if (notification === "HA_STATES") {
       this.loaded = true;
       this.states = payload || {};
-      // Keep selected index within bounds
-      this.selectedIndex = Math.min(this.selectedIndex, Math.max(0, this.records.length - 1));
-      this.updateDom(300);
+      // Build a lightweight records array from the new states for comparison
+      const newRecords = this._buildRecordsArray();
+      const newKey = this._computeRecordsKey(newRecords);
+      const oldKey = this._computeRecordsKey(this.records || []);
+
+      // Keep selected index within bounds (use newRecords length)
+      this.selectedIndex = Math.min(this.selectedIndex, Math.max(0, newRecords.length - 1));
+
+      if (oldKey !== newKey) {
+        // Structural change (different entities / names / icons) -> full re-render
+        this.records = newRecords;
+        this.updateDom(0);
+      } else {
+        // Only state values changed; update in-place to avoid flicker
+        this.records = newRecords;
+        this._updateRowsInPlace();
+      }
     } else if (notification === "HA_WARN") {
       Log.warn("MMM-HomeAssistant: " + (payload && payload.message ? payload.message : ""));
       this.loaded = true; // stop showing persistent 'Loading...'
@@ -175,12 +220,12 @@ Module.register("MMM-HomeAssistant", {
       case "up":
       case "ha_prev":
         this.selectedIndex = Math.max(0, this.selectedIndex - 1);
-        this.updateDom(0);
+        this._updateSelectionInPlace();
         break;
       case "down":
       case "ha_next":
         this.selectedIndex = Math.min(Math.max(0, this.records.length - 1), this.selectedIndex + 1);
-        this.updateDom(0);
+        this._updateSelectionInPlace();
         break;
       case "toggle":
       case "select":
@@ -194,8 +239,62 @@ Module.register("MMM-HomeAssistant", {
         break;
       default:
         // Unhandled actions may be relevant to other modules (spotify etc.) - re-broadcast globally
-        this.sendSocketNotification("USER_ACTION", { action });
+          // Use sendNotification so other modules' front-ends can receive and forward to their node_helpers
+          this.sendNotification("USER_ACTION", { action });
         break;
+    }
+  }
+
+  ,
+
+  _updateRowsInPlace() {
+    if (typeof document === 'undefined' || !this.identifier) return;
+    const moduleWrapper = document.getElementById(this.identifier);
+    if (!moduleWrapper) return this.updateDom(0);
+    const content = moduleWrapper.getElementsByClassName('module-content');
+    if (!content || content.length === 0) return this.updateDom(0);
+    const list = content[0].querySelector('.mmm-ha-list');
+    if (!list) return this.updateDom(0);
+    const rows = list.querySelectorAll('.mmm-ha-row');
+    if (!rows || rows.length !== this.records.length) return this.updateDom(0);
+
+    for (let i = 0; i < this.records.length; i++) {
+      const r = this.records[i];
+      const row = rows[i];
+      if (!row) continue;
+      // update selected class
+      if (i === this.selectedIndex) row.classList.add('selected'); else row.classList.remove('selected');
+      // update state text
+      const stateEl = row.querySelector('.mmm-ha-state');
+      if (stateEl) stateEl.textContent = this.formatState(r.id, r.state);
+      // update last changed time
+      const timeEl = row.querySelector('.mmm-ha-time');
+      if (this.config.showLastChanged && r.state && r.state.last_changed) {
+        if (timeEl) {
+          timeEl.textContent = new Date(r.state.last_changed).toLocaleTimeString();
+        } else {
+          // if missing, rebuild full DOM to be safe
+          return this.updateDom(0);
+        }
+      } else {
+        if (timeEl) timeEl.parentNode.removeChild(timeEl);
+      }
+    }
+  },
+
+  _updateSelectionInPlace() {
+    if (typeof document === 'undefined' || !this.identifier) return this.updateDom(0);
+    const moduleWrapper = document.getElementById(this.identifier);
+    if (!moduleWrapper) return this.updateDom(0);
+    const content = moduleWrapper.getElementsByClassName('module-content');
+    if (!content || content.length === 0) return this.updateDom(0);
+    const list = content[0].querySelector('.mmm-ha-list');
+    if (!list) return this.updateDom(0);
+    const rows = list.querySelectorAll('.mmm-ha-row');
+    if (!rows || rows.length !== this.records.length) return this.updateDom(0);
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      if (i === this.selectedIndex) row.classList.add('selected'); else row.classList.remove('selected');
     }
   }
 });

@@ -35,6 +35,11 @@ module.exports = NodeHelper.create({
       this.expiry = now + 300;
       return this.accessToken;
     }
+    // Support environment variable fallbacks for safer secret storage
+    this.config.clientID = this.config.clientID || process.env.SPOTIFY_CLIENT_ID || process.env.CLIENT_ID || null;
+    this.config.clientSecret = this.config.clientSecret || process.env.SPOTIFY_CLIENT_SECRET || process.env.CLIENT_SECRET || null;
+    this.config.refreshToken = this.config.refreshToken || process.env.SPOTIFY_REFRESH_TOKEN || process.env.REFRESH_TOKEN || null;
+
     if (!this.config.clientID || !this.config.clientSecret || !this.config.refreshToken) {
       throw new Error('Missing Spotify credentials (clientID, clientSecret, refreshToken or accessToken)');
     }
