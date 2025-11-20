@@ -19,6 +19,7 @@ Module.register("MMM-SpotifyControl", {
   notificationReceived(notification, payload, sender) {
     if (notification === 'USER_ACTION' || notification === 'BUTTON_PRESS') {
       // payload: { action: 'spotify_next' | 'spotify_pause' | ... }
+      Log.info(`MMM-SpotifyControl: forwarding ${notification} -> USER_ACTION`, payload);
       this.sendSocketNotification('USER_ACTION', payload);
     }
   }

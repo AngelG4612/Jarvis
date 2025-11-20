@@ -12,7 +12,7 @@ const { spawn } = require('child_process');
 
 const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID || '';
 const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET || '';
-const REDIRECT_URI = process.env.SPOTIFY_REDIRECT_URI || 'http://localhost:8888/callback';
+const REDIRECT_URI = process.env.SPOTIFY_REDIRECT_URI || 'http://127.0.0.1:8888/callback'; // do not use localhost since spotify does not understand it as a valid redirect URI
 const PORT = 8888;
 const SCOPES = [
   'user-modify-playback-state',

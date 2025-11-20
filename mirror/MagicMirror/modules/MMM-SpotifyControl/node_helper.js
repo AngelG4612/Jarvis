@@ -13,6 +13,7 @@ module.exports = NodeHelper.create({
   },
 
   socketNotificationReceived(notification, payload) {
+    this.log(`socketNotificationReceived: ${notification} ${payload ? JSON.stringify(payload) : ''}`);
     if (notification === 'SPOTIFY_CONFIG') {
       this.config = Object.assign({}, this.config, payload || {});
       if (this.config.accessToken) {
@@ -22,7 +23,10 @@ module.exports = NodeHelper.create({
     }
     if (notification === 'BUTTON_PRESS' || notification === 'USER_ACTION') {
       const action = payload && payload.action;
-      this.handleAction(action).catch(err => this.log('Action error: ' + err.message));
+      this.log('Received action: ' + action);
+      this.handleAction(action).then(() => {
+        this.log('Action completed: ' + action);
+      }).catch(err => this.log('Action error: ' + err.message));
     }
   },
 
@@ -71,7 +75,24 @@ module.exports = NodeHelper.create({
       opts.body = JSON.stringify(body);
     }
     const url = 'https://api.spotify.com' + path;
-    const r = await fetch(url, opts);
+    let r = await fetch(url, opts);
+    // If token expired/invalid (401), try one refresh and retry the request once.
+    if (r.status === 401) {
+      this.log(`Spotify API 401 for ${method} ${path} — attempting token refresh and retry`);
+      // invalidate and refresh
+      this.accessToken = null;
+      try {
+        await this.ensureToken();
+      } catch (e) {
+        // couldn't refresh
+        const txt = await r.text().catch(()=>'<no body>');
+        throw new Error(`Spotify API ${r.status}: ${txt} (token refresh failed: ${e.message})`);
+      }
+      // update Authorization header and retry once
+      opts.headers.Authorization = `Bearer ${this.accessToken}`;
+      r = await fetch(url, opts);
+    }
+
     if (!r.ok && r.status !== 204) {
       const txt = await r.text();
       throw new Error(`Spotify API ${r.status}: ${txt}`);
@@ -82,6 +103,7 @@ module.exports = NodeHelper.create({
 
   async handleAction(action) {
     if (!action) return;
+    this.log('handleAction: ' + action);
     switch(action) {
       case 'spotify_next':
         await this.api('POST','/v1/me/player/next');
