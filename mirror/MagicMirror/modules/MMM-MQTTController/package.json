@@ -1,0 +1,17 @@
+{
+  "name": "mmm-mqtt-controller",
+  "version": "1.0.0",
+  "description": "MagicMirror module for controlling module visibility via MQTT",
+  "main": "MMM-MQTTController.js",
+  "dependencies": {
+    "mqtt": "^5.0.0"
+  },
+  "keywords": [
+    "magicmirror",
+    "mqtt",
+    "iot",
+    "smart-home"
+  ],
+  "author": "Jarvis Project",
+  "license": "MIT"
+}
