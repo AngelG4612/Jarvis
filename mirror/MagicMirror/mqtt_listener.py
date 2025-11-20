@@ -84,16 +84,30 @@ def on_message(client, userdata, msg):
         # ----------------------------------------------------------
         elif topic == "mirror/module":
             try:
-                module, action = payload.split(":")
+                parts = payload.split(":")
+                if len(parts) != 2:
+                    raise ValueError(f"Expected format 'module:action', got '{payload}'")
+                
+                module, action = parts
+                module = module.strip()
+                action = action.strip()
+                
                 print(f"Module command: {module} -> {action}")
 
-                response = requests.get(
-                    f"{MIRROR_API}/module/{module}/{action}"
-                )
+                # Call MMM-Remote-Control API
+                # Format: http://localhost:8080/api/module/moduleName/action
+                url = f"{MIRROR_API}/module/{module}/{action}"
+                print(f"Calling API: {url}")
+                
+                response = requests.get(url, timeout=5)
+                print(f"API Response: {response.status_code} - {response.text}")
                 response.raise_for_status()
 
-            except ValueError:
-                print(f"Invalid module payload: {payload}")
+            except ValueError as e:
+                print(f"Invalid module payload: {e}")
+            except requests.exceptions.ConnectionError as e:
+                print(f"Cannot connect to MagicMirror API at {MIRROR_API}: {e}")
+                print("Make sure MagicMirror is running and MMM-Remote-Control is enabled")
             except requests.RequestException as e:
                 print(f"Module control error: {e}")
 

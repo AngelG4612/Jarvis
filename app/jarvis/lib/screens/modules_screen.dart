@@ -10,16 +10,15 @@ class ModulesScreen extends StatefulWidget {
 }
 
 class _ModulesScreenState extends State<ModulesScreen> {
-  // Default modules list (you can expand this)
+  // Modules must match MagicMirror config.js names
   final Map<String, bool> modules = {
-    'Bus Schedule': true,
-    'Train Schedule': true,
-    'Spotify Schedule': false,
-    'Weather Schedule': true,
-    'News Feed': false,
-    'Calendar': true,
-    'Compliments': false,
-    'Clock': true,
+    'clock': true,
+    'calendar': true,
+    'weather': true,
+    'newsfeed': false,
+    'compliments': false,
+    'alert': true,
+    'updatenotification': true,
   };
 
   void _toggleModule(String name, bool enabled) {
@@ -27,8 +26,10 @@ class _ModulesScreenState extends State<ModulesScreen> {
       modules[name] = enabled;
     });
 
-    // Send MQTT message to Pi
-    widget.mqtt.publish('mirror/module', '$name:${enabled ? "on" : "off"}');
+    // Send MQTT message to Pi using MMM-Remote-Control API format
+    // Format: "moduleName:show" or "moduleName:hide"
+    final action = enabled ? 'show' : 'hide';
+    widget.mqtt.publish('mirror/module', '$name:$action');
   }
 
   void _addModuleDialog() {
