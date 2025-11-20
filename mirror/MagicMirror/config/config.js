@@ -41,7 +41,7 @@ let config = {
 
 	modules: [
 		{
-			module: "alert",
+			module: "alert"
 		},
 		{
 			module: "updatenotification",
@@ -124,19 +124,19 @@ let config = {
 			config: {
 				apiKey: "PpH6hdBcpdUPimEM9qwnw3Rh5",
 				stops: [
-					{ route: "22", stopId: "14787", label: "Clark & Addison" },
+					{ route: "22", stopId: "14787", label: "Clark & Addison" }
 				],
 				updateInterval: 60000
 			}
 		},
 
-		// Spotify Module
+		// Spotify Module (original)
 		{
 			module: "MMM-SpotifyPlayer",
 			position: "bottom_center",
 			config: {
-				clientID: "1b2d164490694787b51c76160b9ad58e", //replace with your own
-				clientSecret: "92b5fa4a61114548a7c7bc6674a7f794", //replace with your own
+				clientID: "1b2d164490694787b51c76160b9ad58e",
+				clientSecret: "92b5fa4a61114548a7c7bc6674a7f794",
 				accessToken: "YOUR_ACCESS_TOKEN",
 				refreshToken: "YOUR_REFRESH_TOKEN",
 				updateInterval: 5000
@@ -149,23 +149,60 @@ let config = {
 			position: "top_left",
 			config: {
 				title: "Home Status",
-				baseUrl: HA_BASE_URL, // or your HA URL
-				token: HA_TOKEN, // your long-lived access token stored in secrets.yaml
-				useWebSocket: true,
+				// If your Home Assistant is served over plain HTTP (no TLS) use http:// here.
+				// WRONG_VERSION_NUMBER often means the helper attempted wss but the server answered plain HTTP.
+				// Recommended: set to http://localhost:8123 or set useWebSocket:false to force REST polling.
+				baseUrl: "http://localhost:8123",
+				token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJjMDI5M2Q2MTQxMTY0NWQxYjFhMWYyZDdhZGFkOWE1ZCIsImlhdCI6MTc2MzYxNzAzOCwiZXhwIjoyMDc4OTc3MDM4fQ.B8nNYyLLg4r_r26ekCQTIxBGcTboh99rJRWSMR7dmdo",
+				useWebSocket: true, // set to false to avoid websocket/TLS issues; falls back to REST polling
 				restPollSeconds: 15,
 				showLastChanged: true,
 				entities: [
-					{ id: "light.master_bedroom_main_lights", name: "Master Bedroom Lights", icon: "fa-lightbulb" }
-					// { id: "light.living_room", name: "Living Room Light", icon: "fa-lightbulb" },
-					// { id: "switch.coffee_maker", name: "Coffee Maker", icon: "fa-mug-hot" }
-				]
+					{id: "person.jarvis", name: "Jarvis", icon: "fa-user"}
+					// { id: "light.master_bedroom_main_lights", name: "Master Bedroom Lights", icon: "fa-lightbulb" }
+				],
+				// expose selection control to buttons module
+				enableButtonControl: true
+				// If you must use websockets with self-signed certs, you can add:
+				// allowInsecureTLS: true
+			}
+		},
+
+		// Physical buttons / keyboard bridge (no UI)
+		{
+			module: "MMM-PhysicalButtons",
+			position: "bottom_right",
+			config: {
+				gpio: {
+					up: null,
+					down: null,
+					select: null,
+					spotify_next: null,
+					spotify_prev: null,
+					spotify_pause: null
+				},
+				keys: {
+					up: "ArrowUp",
+					down: "ArrowDown",
+					select: "Enter",
+					spotify_next: ">",
+					spotify_prev: "<",
+					spotify_pause: " "
+				}
+			}
+		},
+
+		// Spotify control (responds to BUTTON_PRESS or USER_ACTION)
+		{
+			module: "MMM-SpotifyControl",
+			position: "bottom_center",
+			config: {
+				clientID: "1b2d164490694787b51c76160b9ad58e",
+				clientSecret: "92b5fa4a61114548a7c7bc6674a7f794",
+				refreshToken: "YOUR_REFRESH_TOKEN",
+				accessToken: null
 			}
 		}
-
-
-
-
-
 	]
 };
 

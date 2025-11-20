@@ -1,0 +1,11 @@
+{
+  "name": "mmm-physicalbuttons",
+  "version": "0.1.0",
+  "description": "Physical button and keyboard bridge for MagicMirror modules (emits BUTTON_PRESS socket notifications).",
+  "main": "MMM-PhysicalButtons.js",
+  "author": "Jarvis",
+  "license": "MIT",
+  "dependencies": {
+    "onoff": "^6.0.0"
+  }
+}

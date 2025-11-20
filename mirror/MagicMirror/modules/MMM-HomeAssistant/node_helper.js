@@ -46,46 +46,79 @@ module.exports = NodeHelper.create({
   },
 
   connect() {
-    const { baseUrl, token, useWebSocket, restPollSeconds } = this.config;
+    let { baseUrl, token, useWebSocket, restPollSeconds } = this.config;
+    // Allow falling back to environment variables for baseUrl/token
+    baseUrl = baseUrl || process.env.HA_BASE_URL || process.env.HA_URL || process.env.HASS_BASE_URL;
+    token = token || process.env.HA_TOKEN || process.env.HASS_TOKEN;
     if (!baseUrl || !token) {
       this.sendSocketNotification("HA_ERROR", { message: "Missing baseUrl or token" });
       return;
     }
+    // store resolved values back to config for later use
+    this.config.baseUrl = baseUrl;
+    this.config.token = token;
 
     this.cleanup(); // clear previous
 
     if (useWebSocket) {
-      try {
-        const wsUrl = baseUrl.replace(/^http/i, (m) => m.toLowerCase() === "https" ? "wss" : "ws") + "/api/websocket";
-        this.ws = new WebSocket(wsUrl);
+      const tryConnectWs = (wsUrl, options = {}, triedAlt = false) => {
+        try {
+          this.log(`Attempting WebSocket: ${wsUrl}`);
+          this.ws = new WebSocket(wsUrl, options);
 
-        this.ws.on("open", () => {
-          this.connected = true;
-          this.log("WebSocket connected");
-        });
+          this.ws.on("open", () => {
+            this.connected = true;
+            this.log("WebSocket connected");
+          });
 
-        this.ws.on("message", (data) => {
-          try {
-            const msg = JSON.parse(data);
-            this.handleWsMessage(msg);
-          } catch (e) {
-            this.log("WS parse error: " + e.message);
-          }
-        });
+          this.ws.on("message", (data) => {
+            try {
+              const msg = JSON.parse(data);
+              this.handleWsMessage(msg);
+            } catch (e) {
+              this.log("WS parse error: " + e.message);
+            }
+          });
 
-        this.ws.on("close", () => {
-          this.connected = false;
-          this.log("WebSocket closed; retrying in 5s…");
-          setTimeout(() => this.connect(), 5000);
-        });
+          this.ws.on("close", () => {
+            this.connected = false;
+            this.log("WebSocket closed; retrying in 5s…");
+            setTimeout(() => this.connect(), 5000);
+          });
 
-        this.ws.on("error", (err) => {
-          this.log("WebSocket error: " + err.message);
-        });
-      } catch (e) {
-        this.log("WS connect failed, falling back to REST: " + e.message);
-        this.startRestPolling(restPollSeconds);
+          this.ws.on("error", (err) => {
+            // If TLS protocol mismatch (WRONG_VERSION_NUMBER) or other TLS errors, try alternate ws/wsS once
+            this.log("WebSocket error: " + (err && err.message ? err.message : String(err)));
+            if (!triedAlt) {
+              // swap wss <-> ws
+              const altUrl = wsUrl.replace(/^wss:/i, 'ws:').replace(/^ws:/i, 'wss:');
+              if (altUrl !== wsUrl) {
+                this.log(`Retrying WebSocket with alternate protocol: ${altUrl}`);
+                // cleanup current instance before retry
+                try { this.ws.terminate(); } catch (e) {}
+                return tryConnectWs(altUrl, options, true);
+              }
+            }
+            // final fallback to REST polling
+            this.log("WS connect failed, falling back to REST: " + (err && err.message ? err.message : String(err)));
+            this.sendSocketNotification("HA_WARN", { message: `WebSocket connect failed: ${err && err.message ? err.message : String(err)}` });
+            this.startRestPolling(restPollSeconds);
+          });
+        } catch (e) {
+          this.log("WS connect exception, falling back to REST: " + e.message);
+          this.sendSocketNotification("HA_WARN", { message: `WebSocket connect exception: ${e.message}` });
+          this.startRestPolling(restPollSeconds);
+        }
+      };
+
+      // build initial ws url and options
+      const wsUrl = baseUrl.replace(/^http/i, (m) => m.toLowerCase() === "https" ? "wss" : "ws") + "/api/websocket";
+      const wsOptions = {};
+      // allow insecure TLS if explicitly requested in config (useful for self-signed certs)
+      if (this.config.allowInsecureTLS) {
+        wsOptions.rejectUnauthorized = false;
       }
+      tryConnectWs(wsUrl, wsOptions, false);
     } else {
       this.startRestPolling(restPollSeconds);
     }

@@ -1,3 +1,46 @@
+/* Styles for MMM-HomeAssistant selection highlight */
+.mmm-ha-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.mmm-ha-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+
+.mmm-ha-row.selected {
+  background-color: rgba(0, 150, 255, 0.08);
+  box-shadow: inset 0 0 0 2px rgba(0,150,255,0.06);
+}
+
+.mmm-ha-left {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.mmm-ha-name {
+  font-weight: 500;
+}
+
+.mmm-ha-right {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.mmm-ha-state {
+  opacity: 0.9;
+}
+
+.mmm-ha-time {
+  font-size: 0.85em;
+  opacity: 0.7;
+}
 .mmm-ha { padding: 8px 12px; }
 .mmm-ha-title { font-size: 18px; font-weight: 600; margin-bottom: 6px; }
 .mmm-ha-list { display: flex; flex-direction: column; gap: 6px; }
