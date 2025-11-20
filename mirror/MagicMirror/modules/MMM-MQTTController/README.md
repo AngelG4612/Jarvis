@@ -35,7 +35,7 @@ Add to your `config.js`:
 Set these before running MagicMirror to connect to a different broker:
 
 ```bash
-export MQTT_BROKER="10.0.0.64"
+export MQTT_BROKER="192.168.0.220"
 export MQTT_PORT="1883"
 npm start
 ```
@@ -46,13 +46,13 @@ Send MQTT messages in the format `moduleName:action`:
 
 ```bash
 # Show the clock module
-mosquitto_pub -h 10.0.0.64 -t "mirror/module" -m "clock:show"
+mosquitto_pub -h 192.168.0.220 -t "mirror/module" -m "clock:show"
 
 # Hide the weather module
-mosquitto_pub -h 10.0.0.64 -t "mirror/module" -m "weather:hide"
+mosquitto_pub -h 192.168.0.220 -t "mirror/module" -m "weather:hide"
 
 # Toggle newsfeed
-mosquitto_pub -h 10.0.0.64 -t "mirror/module" -m "newsfeed:show"
+mosquitto_pub -h 192.168.0.220 -t "mirror/module" -m "newsfeed:show"
 ```
 
 ## Module Names

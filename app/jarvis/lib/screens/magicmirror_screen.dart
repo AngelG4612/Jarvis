@@ -16,9 +16,9 @@ class _MagicMirrorScreenState extends State<MagicMirrorScreen> {
   bool isLoading = false;
   String? errorMessage;
 
-  static const String mirrorUrl = 'http://10.0.0.64:8080';
+  //static const String mirrorUrl = 'http://192.168.0.220:8080';
   //static const String mirrorUrl = 'http://10.229.241.164:8080';
-  //static const String mirrorUrl = 'http://192.168.137.92:8080';
+  static const String mirrorUrl = 'http://192.168.0.220:8080';
 
   @override
   void initState() {

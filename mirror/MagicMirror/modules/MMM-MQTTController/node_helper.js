@@ -9,7 +9,7 @@ module.exports = NodeHelper.create({
 	},
 
 	initMQTT: function() {
-		const mqttBroker = process.env.MQTT_BROKER || "10.0.0.64";
+		const mqttBroker = process.env.MQTT_BROKER || "192.168.0.220";
 		const mqttPort = process.env.MQTT_PORT || 1883;
 		const brokerURL = `mqtt://${mqttBroker}:${mqttPort}`;
 
