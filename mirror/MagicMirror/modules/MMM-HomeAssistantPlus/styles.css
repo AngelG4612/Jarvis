@@ -1,0 +1,17 @@
+.mmm-ha-plus .ha-plus-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.mmm-ha-plus .ha-plus-card {
+  background: rgba(0,0,0,0.4);
+  border-radius: 6px;
+  padding: 8px;
+  width: 220px;
+  box-sizing: border-box;
+}
+.mmm-ha-plus .ha-plus-title { font-weight: bold; margin-bottom: 6px; }
+.mmm-ha-plus .ha-plus-camera { width: 100%; height: auto; border-radius: 4px; display:block; }
+.mmm-ha-plus .ha-plus-state-large { font-size: 1.6em; margin-bottom: 6px; }
+.mmm-ha-plus .ha-plus-attrs { font-size: 0.85em; color: #ddd; }
+.mmm-ha-plus .ha-plus-empty { color: #bbb; }
