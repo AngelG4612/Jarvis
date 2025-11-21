@@ -19,9 +19,9 @@ class _MagicMirrorScreenState extends State<MagicMirrorScreen>
   String? errorMessage;
   late Orientation currentOrientation;
 
-  //static const String mirrorUrl = 'http://192.168.0.220:8080';
+  //static const String mirrorUrl = 'http://10.0.0.64:8080';
   //static const String mirrorUrl = 'http://10.229.241.164:8080';
-  static const String mirrorUrl = 'http://192.168.0.220:8080';
+  static const String mirrorUrl = 'http://10.0.0.64:8080'; 
 
   @override
   void initState() {
@@ -47,9 +47,7 @@ class _MagicMirrorScreenState extends State<MagicMirrorScreen>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     // Lock back to portrait when leaving this screen
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-    ]);
+    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     super.dispose();
   }
 
@@ -104,9 +102,7 @@ class _MagicMirrorScreenState extends State<MagicMirrorScreen>
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) {
           // Reset orientation when leaving
-          SystemChrome.setPreferredOrientations([
-            DeviceOrientation.portraitUp,
-          ]);
+          SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
         }
       },
       child: Scaffold(
@@ -125,7 +121,8 @@ class _MagicMirrorScreenState extends State<MagicMirrorScreen>
                 // Full-screen WebView with responsive sizing
                 SizedBox(
                   width: screenSize.width,
-                  height: screenSize.height -
+                  height:
+                      screenSize.height -
                       kToolbarHeight -
                       MediaQuery.of(context).padding.top,
                   child: WebViewWidget(controller: webViewController),
@@ -167,8 +164,11 @@ class _MagicMirrorScreenState extends State<MagicMirrorScreen>
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.error,
-                              color: Colors.white, size: 48),
+                          const Icon(
+                            Icons.error,
+                            color: Colors.white,
+                            size: 48,
+                          ),
                           const SizedBox(height: 12),
                           Text(
                             errorMessage!,
@@ -194,7 +194,9 @@ class _MagicMirrorScreenState extends State<MagicMirrorScreen>
                   right: 16,
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 6),
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.black87,
                       borderRadius: BorderRadius.circular(20),
@@ -205,9 +207,10 @@ class _MagicMirrorScreenState extends State<MagicMirrorScreen>
                       children: [
                         Icon(Icons.circle, color: color, size: 10),
                         const SizedBox(width: 6),
-                        Text(text,
-                            style:
-                                TextStyle(color: color, fontSize: 12)),
+                        Text(
+                          text,
+                          style: TextStyle(color: color, fontSize: 12),
+                        ),
                       ],
                     ),
                   ),
