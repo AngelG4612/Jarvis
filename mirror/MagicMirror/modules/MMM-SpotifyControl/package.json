@@ -1,0 +1,7 @@
+{
+  "name": "mmm-spotifycontrol",
+  "version": "0.1.0",
+  "description": "Spotify control bridge for MagicMirror triggered by physical buttons or USER_ACTION broadcasts.",
+  "main": "MMM-SpotifyControl.js",
+  "license": "MIT"
+}

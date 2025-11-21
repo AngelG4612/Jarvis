@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 const NodeHelper = require("node_helper");
 const https = require("https");
 const querystring = require("querystring");
@@ -166,3 +167,92 @@ module.exports = NodeHelper.create({
         req.end();
     }
 });
+=======
+/* node_helper for MMM-SpotifyPlayer: polls Spotify /v1/me/player and sends SPOTIFY_PLAYER_STATE */
+const NodeHelper = require('node_helper');
+const fetch = (...args) => import('node-fetch').then(({default: f}) => f(...args));
+
+function base64Encode(s) { return Buffer.from(s).toString('base64'); }
+
+module.exports = NodeHelper.create({
+  start() {
+    this.config = {};
+    this.accessToken = null;
+    this.expiry = 0;
+    this.pollRef = null;
+    this.log('SpotifyPlayer helper started');
+  },
+
+  socketNotificationReceived(notification, payload) {
+    if (notification === 'SPOTIFY_PLAYER_CONFIG') {
+      this.config = Object.assign({}, this.config, payload || {});
+      this.startPolling();
+    } else if (notification === 'SPOTIFY_PLAYER_REFRESH') {
+      this.fetchState().catch(err => this.sendSocketNotification('SPOTIFY_PLAYER_ERROR', { message: err.message }));
+    }
+  },
+
+  async ensureToken() {
+    const now = Date.now() / 1000;
+    if (this.accessToken && this.expiry > now + 30) return this.accessToken;
+    // env fallbacks
+    this.config.clientID = this.config.clientID || process.env.SPOTIFY_CLIENT_ID || null;
+    this.config.clientSecret = this.config.clientSecret || process.env.SPOTIFY_CLIENT_SECRET || null;
+    this.config.refreshToken = this.config.refreshToken || process.env.SPOTIFY_REFRESH_TOKEN || null;
+
+    if (!this.config.clientID || !this.config.clientSecret || !this.config.refreshToken) {
+      throw new Error('Missing Spotify credentials (clientID, clientSecret, refreshToken)');
+    }
+
+    const body = new URLSearchParams();
+    body.append('grant_type','refresh_token');
+    body.append('refresh_token', this.config.refreshToken);
+
+    const resp = await fetch('https://accounts.spotify.com/api/token', {
+      method: 'POST',
+      headers: {
+        Authorization: 'Basic ' + base64Encode(`${this.config.clientID}:${this.config.clientSecret}`),
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: body.toString()
+    });
+    if (!resp.ok) throw new Error('Token refresh failed ' + resp.status);
+    const data = await resp.json();
+    this.accessToken = data.access_token;
+    this.expiry = now + (data.expires_in || 3600);
+    this.log('Obtained Spotify access token');
+    return this.accessToken;
+  },
+
+  async fetchState() {
+    const token = await this.ensureToken();
+    const r = await fetch('https://api.spotify.com/v1/me/player', { headers: { Authorization: `Bearer ${token}` } });
+    if (r.status === 204) {
+      // no active device or no content
+      this.sendSocketNotification('SPOTIFY_PLAYER_STATE', null);
+      return null;
+    }
+    if (!r.ok) {
+      const txt = await r.text();
+      throw new Error(`Spotify API ${r.status}: ${txt}`);
+    }
+    const json = await r.json();
+    this.sendSocketNotification('SPOTIFY_PLAYER_STATE', json);
+    return json;
+  },
+
+  startPolling() {
+    if (this.pollRef) clearInterval(this.pollRef);
+    const period = Math.max(2000, Number(this.config.updateInterval) || 5000);
+    this.fetchState().catch(err => this.sendSocketNotification('SPOTIFY_PLAYER_ERROR', { message: err.message }));
+    this.pollRef = setInterval(() => this.fetchState().catch(err => this.sendSocketNotification('SPOTIFY_PLAYER_ERROR', { message: err.message })), period);
+    this.log(`Spotify polling every ${period}ms`);
+  },
+
+  stop() {
+    if (this.pollRef) clearInterval(this.pollRef);
+  },
+
+  log(msg) { console.log('[MMM-SpotifyPlayer] ' + msg); }
+});
+>>>>>>> origin/controls

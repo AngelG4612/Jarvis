@@ -64,6 +64,12 @@ jarvis/
 
 ## 🚀 Getting Started
 
+Installing curl
+```bash
+sudo apt update
+sudo apt install curl
+```
+
 If Node.js not installed, you can use the NodeSource repo (works great on Raspberry Pi OS/Debian 12)
 ```bash
 # Add NodeSource repo for Node 22.x and install
@@ -74,6 +80,25 @@ sudo apt install -y nodejs
 node -v
 npm -v
 
+```
+Installing Docker
+```bash
+sudo apt update && sudo apt -y upgrade
+sudo apt -y install git curl ca-certificates apt-transport-https
+```
+```bash
+# Docker
+curl -fsSL https://get.docker.com | sh
+sudo usermod -aG docker $USER
+```
+```bash
+# Docker Compose plugin
+sudo apt -y install docker-compose-plugin
+```
+
+```bash
+# Reboot to apply group changes
+sudo reboot
 ```
 
 ### 1) Clone the repo

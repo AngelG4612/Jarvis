@@ -1,0 +1,7 @@
+{
+  "name": "mmm-spotifyplayer",
+  "version": "0.1.0",
+  "description": "Simple Spotify now-playing display for MagicMirror",
+  "main": "MMM-SpotifyPlayer.js",
+  "license": "MIT"
+}
