@@ -21,7 +21,7 @@ class _MagicMirrorScreenState extends State<MagicMirrorScreen>
 
   //static const String mirrorUrl = 'http://10.0.0.64:8080';
   //static const String mirrorUrl = 'http://10.229.241.164:8080';
-  static const String mirrorUrl = 'http://10.0.0.64:8080'; 
+  static const String mirrorUrl = 'http://10.0.0.64:8080';
 
   @override
   void initState() {
@@ -34,8 +34,14 @@ class _MagicMirrorScreenState extends State<MagicMirrorScreen>
       DeviceOrientation.landscapeLeft,
       DeviceOrientation.landscapeRight,
     ]);
-    currentOrientation = MediaQuery.of(context).orientation;
     _initializeWebView();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Safe to access MediaQuery here
+    currentOrientation = MediaQuery.of(context).orientation;
   }
 
   @override
