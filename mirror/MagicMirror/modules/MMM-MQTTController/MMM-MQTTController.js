@@ -14,9 +14,13 @@ Module.register("MMM-MQTTController", {
 			const { topic, message } = payload;
 			Log.log(`[MQTT] ${topic}: ${message}`);
 
-			// Parse module control messages: "module_name:show" or "module_name:hide"
+			// Route based on topic
 			if (topic === "mirror/module") {
 				this.handleModuleControl(message);
+			} else if (topic === "mirror/display") {
+				this.handleDisplayControl(message);
+			} else if (topic === "mirror/restart") {
+				this.handleRestart(message);
 			}
 		}
 	},
@@ -53,6 +57,40 @@ Module.register("MMM-MQTTController", {
 
 		} catch (error) {
 			Log.error("Error handling module control:", error);
+		}
+	},
+
+	handleDisplayControl: function(message) {
+		try {
+			const action = message.toString().toLowerCase().trim();
+			Log.log(`[Display Control] ${action}`);
+
+			if (action === "on" || action === "true" || action === "1") {
+				// Show all modules
+				MM.getModules().show(500);
+				Log.log("[Display Control] Turning display ON - showing all modules");
+			} else if (action === "off" || action === "false" || action === "0") {
+				// Hide all modules
+				MM.getModules().hide(500);
+				Log.log("[Display Control] Turning display OFF - hiding all modules");
+			}
+		} catch (error) {
+			Log.error("Error handling display control:", error);
+		}
+	},
+
+	handleRestart: function(message) {
+		try {
+			const action = message.toString().toLowerCase().trim();
+			Log.log(`[Restart] ${action}`);
+
+			if (action === "true" || action === "1") {
+				Log.log("[Restart] Restarting MagicMirror via page reload");
+				// Reload the page to restart MagicMirror
+				window.location.reload();
+			}
+		} catch (error) {
+			Log.error("Error handling restart:", error);
 		}
 	},
 
