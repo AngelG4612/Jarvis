@@ -65,14 +65,25 @@ Module.register("MMM-MQTTController", {
 			const action = message.toString().toLowerCase().trim();
 			Log.log(`[Display Control] ${action}`);
 
+			// Get all modules
+			const modules = MM.getModules();
+			
 			if (action === "on" || action === "true" || action === "1") {
 				// Show all modules
-				MM.getModules().show(500);
 				Log.log("[Display Control] Turning display ON - showing all modules");
+				modules.forEach((module) => {
+					if (module.name !== "MMM-MQTTController") { // Don't show this control module
+						module.show(500);
+					}
+				});
 			} else if (action === "off" || action === "false" || action === "0") {
 				// Hide all modules
-				MM.getModules().hide(500);
 				Log.log("[Display Control] Turning display OFF - hiding all modules");
+				modules.forEach((module) => {
+					if (module.name !== "MMM-MQTTController") { // Don't hide this control module
+						module.hide(500);
+					}
+				});
 			}
 		} catch (error) {
 			Log.error("Error handling display control:", error);
