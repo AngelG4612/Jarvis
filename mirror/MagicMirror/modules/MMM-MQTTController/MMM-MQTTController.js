@@ -6,7 +6,7 @@ Module.register("MMM-MQTTController", {
 	start: function() {
 		Log.log("MMM-MQTTController started");
 		this.moduleStates = {}; // Track module visibility states
-		this.sendSocketNotification("INIT_MQTT", {});
+		this.sendSocketNotification("INIT_MQTT", this.config);
 	},
 
 	socketNotificationReceived: function(notification, payload) {

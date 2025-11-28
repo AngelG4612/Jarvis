@@ -2,72 +2,72 @@ const NodeHelper = require("node_helper");
 const mqtt = require("mqtt");
 
 module.exports = NodeHelper.create({
-	start: function() {
-		console.log("[MMM-MQTTController Node Helper] Starting...");
-		this.mqttClient = null;
-		this.initMQTT();
-	},
 
-	initMQTT: function() {
-		const mqttBroker = process.env.MQTT_BROKER || "10.0.0.64";
-		const mqttPort = process.env.MQTT_PORT || 1883;
-		const brokerURL = `mqtt://${mqttBroker}:${mqttPort}`;
+    start: function () {
+        console.log("[MMM-MQTTController Node Helper] Loaded");
+        this.mqttClient = null;
+        this.config = null; // will receive config from front-end
+    },
 
-		console.log(`[MQTT Controller] Connecting to ${brokerURL}`);
+    // Receive config from module
+    socketNotificationReceived: function (notification, payload) {
+        if (notification === "INIT_MQTT") {
+            console.log("[MQTT Controller] Received config:", payload);
+            this.config = payload;
+            this.initMQTT();  // start MQTT *after* receiving config
+        }
+    },
 
-		try {
-			this.mqttClient = mqtt.connect(brokerURL, {
-				clientId: `mm-mqtt-controller-${Date.now()}`,
-				reconnectPeriod: 5000,
-				connectTimeout: 4000
-			});
+    initMQTT: function () {
 
-			this.mqttClient.on("connect", () => {
-				console.log("[MQTT Controller] Connected to MQTT broker");
-				this.mqttClient.subscribe("mirror/#", (err) => {
-					if (err) {
-						console.error("[MQTT Controller] Subscribe error:", err);
-					} else {
-						console.log("[MQTT Controller] Subscribed to mirror/#");
-					}
-				});
-			});
+        const broker = this.config.mqttBroker || "localhost";
+        const port = this.config.mqttPort || 1883;
 
-			this.mqttClient.on("message", (topic, message) => {
-				const payload = message.toString();
-				console.log(`[MQTT Controller] Message received: ${topic} -> ${payload}`);
+        const brokerURL = `mqtt://${broker}:${port}`;
 
-				// Forward MQTT messages to the front-end module
-				this.sendSocketNotification("MQTT_MESSAGE", {
-					topic: topic,
-					message: payload
-				});
-			});
+        console.log(`[MQTT Controller] Connecting to ${brokerURL}`);
 
-			this.mqttClient.on("error", (error) => {
-				console.error("[MQTT Controller] Connection error:", error);
-			});
+        try {
+            this.mqttClient = mqtt.connect(brokerURL, {
+                clientId: `mm-mqtt-controller-${Date.now()}`,
+                reconnectPeriod: 5000,
+                connectTimeout: 4000
+            });
 
-			this.mqttClient.on("offline", () => {
-				console.warn("[MQTT Controller] MQTT broker offline");
-			});
+            this.mqttClient.on("connect", () => {
+                console.log("[MQTT Controller] Connected to broker");
+                this.mqttClient.subscribe("mirror/#", (err) => {
+                    if (err) console.error("[MQTT] Subscribe error:", err);
+                    else console.log("[MQTT] Subscribed to mirror/#");
+                });
+            });
 
-		} catch (error) {
-			console.error("[MQTT Controller] Failed to initialize MQTT:", error);
-		}
-	},
+            this.mqttClient.on("message", (topic, message) => {
+                const payload = message.toString();
+                console.log(`[MQTT] ${topic} -> ${payload}`);
 
-	socketNotificationReceived: function(notification, payload) {
-		if (notification === "INIT_MQTT") {
-			console.log("[MQTT Controller] Front-end module initialized");
-			// MQTT should already be connected via initMQTT
-		}
-	},
+                this.sendSocketNotification("MQTT_MESSAGE", {
+                    topic: topic,
+                    message: payload
+                });
+            });
 
-	stop: function() {
-		console.log("[MQTT Controller] Stopping...");
-		if (this.mqttClient) {
-			this.mqttClient.end();
-		}
-	}
+            this.mqttClient.on("error", (error) => {
+                console.error("[MQTT] Error:", error);
+            });
+
+            this.mqttClient.on("offline", () => {
+                console.warn("[MQTT] Broker offline");
+            });
+
+        } catch (error) {
+            console.error("[MQTT] Initialization failed:", error);
+        }
+    },
+
+    stop: function () {
+        console.log("[MQTT Controller] Stopping MQTT...");
+        if (this.mqttClient) this.mqttClient.end();
+    }
 });
+
