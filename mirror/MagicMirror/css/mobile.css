@@ -1,0 +1,47 @@
+/* Mobile scaling rules for MagicMirror */
+@media only screen and (max-width: 700px) {
+
+  /* Shrink the entire MM interface */
+  body {
+    zoom: 0.55;  
+    -moz-transform: scale(0.55);
+    -moz-transform-origin: top left;
+  }
+
+  /* Shrink module text */
+  .module {
+    font-size: 12px !important;
+    line-height: 1.2 !important;
+  }
+
+  .header {
+    font-size: 14px !important;
+  }
+
+  /* Hide extra padding that causes overlap */
+  .region {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Weather */
+  .weather .bright {
+    font-size: 12px !important;
+  }
+
+  /* Clock */
+  .clock .time {
+    font-size: 35px !important;
+  }
+
+  /* Calendar */
+  .calendar .event {
+    font-size: 11px !important;
+  }
+
+  /* Fix weird overlapping images/icons */
+  img, canvas, video {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+}
