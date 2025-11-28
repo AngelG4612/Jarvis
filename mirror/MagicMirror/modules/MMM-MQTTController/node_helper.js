@@ -12,8 +12,8 @@ module.exports = NodeHelper.create({
     // Receive config from module
     socketNotificationReceived: function (notification, payload) {
         if (notification === "INIT_MQTT") {
-            console.log("[MQTT Controller] Received config:", payload);
             this.config = payload;
+			console.log("[MQTT Controller] Received config:", payload);
             this.initMQTT();  // start MQTT *after* receiving config
         }
     },
