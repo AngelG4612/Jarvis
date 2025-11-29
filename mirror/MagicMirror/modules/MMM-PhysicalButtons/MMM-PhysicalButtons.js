@@ -26,4 +26,15 @@ Module.register("MMM-PhysicalButtons", {
   start() {
     this.sendSocketNotification("PB_CONFIG", this.config);
   }
+,
+
+  socketNotificationReceived(notification, payload) {
+    // The helper emits BUTTON_PRESS via sendSocketNotification; re-broadcast
+    // it as a front-end notification so other modules (e.g. MMM-SpotifyControl)
+    // that listen via notificationReceived can react to physical buttons.
+    if (notification === 'BUTTON_PRESS') {
+      Log.info('MMM-PhysicalButtons: received BUTTON_PRESS from helper, broadcasting');
+      this.sendNotification('BUTTON_PRESS', payload);
+    }
+  }
 });
