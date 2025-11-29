@@ -22,7 +22,9 @@ Module.register("MMM-HomeAssistant", {
     this.loaded = false;
     this.selectedIndex = 0; // which row is currently selected
     this.records = [];
-    this.sendSocketNotification("HA_CONFIG", this.config);
+    try {
+      this.sendSocketNotification("HA_CONFIG", { moduleId: this.identifier, config: this.config });
+    } catch (e) {}
   },
 
   // Compute a simple render key for the configured records (ids, names, icons)
@@ -177,8 +179,10 @@ Module.register("MMM-HomeAssistant", {
 
   socketNotificationReceived(notification, payload) {
     if (notification === "HA_STATES") {
+      // Expecting payload: { moduleId, data }
+      if (!payload || payload.moduleId !== this.identifier) return;
       this.loaded = true;
-      this.states = payload || {};
+      this.states = payload.data || {};
       // Build a lightweight records array from the new states for comparison
       const newRecords = this._buildRecordsArray();
       const newKey = this._computeRecordsKey(newRecords);
@@ -197,11 +201,14 @@ Module.register("MMM-HomeAssistant", {
         this._updateRowsInPlace();
       }
     } else if (notification === "HA_WARN") {
+      // module-specific warnings may include moduleId; ignore if not for us
+      if (payload && payload.moduleId && payload.moduleId !== this.identifier) return;
       Log.warn("MMM-HomeAssistant: " + (payload && payload.message ? payload.message : ""));
       this.loaded = true; // stop showing persistent 'Loading...'
       this.errorMessage = payload && payload.message ? payload.message : null;
       this.updateDom(300);
     } else if (notification === "HA_ERROR") {
+      if (payload && payload.moduleId && payload.moduleId !== this.identifier) return;
       Log.error("MMM-HomeAssistant: " + (payload && payload.message ? payload.message : ""));
       this.loaded = true;
       this.errorMessage = payload && payload.message ? payload.message : null;
@@ -235,7 +242,7 @@ Module.register("MMM-HomeAssistant", {
         if (!rec || !rec.id) return;
         const domain = (rec.id.split(".")[0] || "").toLowerCase();
         // Use 'toggle' where supported; otherwise try turn_on/turn_off fallback is not implemented here.
-        this.sendSocketNotification("HA_CALL_SERVICE", { domain, service: "toggle", data: { entity_id: rec.id } });
+  this.sendSocketNotification("HA_CALL_SERVICE", { moduleId: this.identifier, domain, service: "toggle", data: { entity_id: rec.id } });
         break;
       default:
         // Unhandled actions may be relevant to other modules (spotify etc.) - re-broadcast globally
@@ -296,6 +303,13 @@ Module.register("MMM-HomeAssistant", {
       const row = rows[i];
       if (i === this.selectedIndex) row.classList.add('selected'); else row.classList.remove('selected');
     }
+  }
+
+  ,
+
+  stop() {
+    // Unregister this module instance from the helper so it can free resources
+    try { this.sendSocketNotification('HA_REMOVE', { moduleId: this.identifier }); } catch (e) {}
   }
 });
 

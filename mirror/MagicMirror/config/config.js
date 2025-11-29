@@ -75,8 +75,8 @@ let config = {
 			config: {
 				weatherProvider: "openmeteo",
 				type: "current",
-				lat: 40.776676,
-				lon: -73.971321
+				lat: 41.878,
+				lon: -87.629799
 			}
 		},
 		{
@@ -86,8 +86,8 @@ let config = {
 			config: {
 				weatherProvider: "openmeteo",
 				type: "forecast",
-				lat: 40.776676,
-				lon: -73.971321
+				lat: 41.878,
+				lon: -87.629799
 			}
 		},
 		{
@@ -135,11 +135,40 @@ let config = {
 			module: "MMM-SpotifyPlayer",
 			position: "top_center",
 			config: {
-				clientID: "YOUR_CLIENT_ID_HERE",
-				clientSecret: "YOUR_CLIENT_SECRET_HERE",
-				accessToken: "YOUR_ACCESS_TOKEN_HERE",
-				refreshToken: "YOUR_REFRESH_TOKEN_HERE",
+				clientID: "1409bba120724394b7ca3082548c705d",
+				clientSecret: "aa865fb57a2346b592a81c1cce37e790",
+				accessToken: "BQBH0611ihsf0oDT3f5LBBVgIxkCxInC3O297TlGCoJ3MmLjIBPSjrw_ZgbiYviecdUrJ8fH5aTbfrOuJe-wVb35wqTX4uK5MBplT-LhG5-tx4yNGrVCj1CyQ7NTdOAixJtniOgk93Cw7gwX1AZ4S0NIE7_aPQKlHsnh910mrD2TJkQPC5xL_BcnuB6iKMkwluSVVkAgFxfbDDFcVk9gotq872V08zJLKQ32ctSwaANWXpl9VFDe8PM6rjE",
+				refreshToken: "AQAwmsFWrsTb38Nx1fPvvtFEfTuRYj8prKryvFAxJDjshByLhGc9fFeRdKUQO3bOF2kzyMrEmK0Hv9zHK-r-bZZjW3pW4cibr-Jw-TixxZAUsSjnh_YhqbF_FeMK3p-iOdg",
 				updateInterval: 5000
+			}
+		},
+
+		// Home Assistant Module
+		{
+			module: "MMM-HomeAssistant",
+			position: "top_left",
+			config: {
+				title: "Home Environment Sensors",
+				// If your Home Assistant is served over plain HTTP (no TLS) use http:// here.
+				// WRONG_VERSION_NUMBER often means the helper attempted wss but the server answered plain HTTP.
+				// Recommended: set to http://localhost:8123 or set useWebSocket:false to force REST polling.
+				baseUrl: "http://localhost:8123",
+				token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJjMDI5M2Q2MTQxMTY0NWQxYjFhMWYyZDdhZGFkOWE1ZCIsImlhdCI6MTc2MzYxNzAzOCwiZXhwIjoyMDc4OTc3MDM4fQ.B8nNYyLLg4r_r26ekCQTIxBGcTboh99rJRWSMR7dmdo",
+				useWebSocket: true, // set to false to avoid websocket/TLS issues; falls back to REST polling
+				restPollSeconds: 15,
+				showLastChanged: true,
+				entities: [
+					{id: "sensor.i_9psl_carbon_dioxide", name: "CO2 Levels", icon: "fa-cloud"},
+					{id: "sensor.i_9psl_humidity", name: "Humidity Levels", icon: "fa-water"},
+					{id: "sensor.i_9psl_temperature", name: "Temperature", icon: "fa-thermometer-half"},
+					{id: "sensor.i_9psl_voc_index", name: "VOC Index", icon: "fa-smog"}
+
+					// {id: "camera.tapo_c230_a14d_live_view", name: "Living Room Camera", icon: "fa-video"}
+				],
+				// expose selection control to buttons module
+				enableButtonControl: true
+				// If you must use websockets with self-signed certs, you can add:
+				// allowInsecureTLS: true
 			}
 		},
 
@@ -153,13 +182,17 @@ let config = {
 				// WRONG_VERSION_NUMBER often means the helper attempted wss but the server answered plain HTTP.
 				// Recommended: set to http://localhost:8123 or set useWebSocket:false to force REST polling.
 				baseUrl: "http://localhost:8123",
-				token: "YOUR_LONG_LIVED_ACCESS_TOKEN_HERE",
+				token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJjMDI5M2Q2MTQxMTY0NWQxYjFhMWYyZDdhZGFkOWE1ZCIsImlhdCI6MTc2MzYxNzAzOCwiZXhwIjoyMDc4OTc3MDM4fQ.B8nNYyLLg4r_r26ekCQTIxBGcTboh99rJRWSMR7dmdo",
 				useWebSocket: true, // set to false to avoid websocket/TLS issues; falls back to REST polling
 				restPollSeconds: 15,
 				showLastChanged: true,
 				entities: [
-					{id: "person.jarvis", name: "Jarvis", icon: "fa-user"}
-					// { id: "light.master_bedroom_main_lights", name: "Master Bedroom Lights", icon: "fa-lightbulb" }
+					{id: "switch.kitchen_main_lights", name: "Kitchen Main Lights ", icon: "fa-lightbulb"},
+					{id: "light.guest_bedroom_main_lights", name: "Guest Bedroom Lights ", icon: "fa-lightbulb"},
+					{id: "light.master_bedroom_main_lights", name: "Master Bedroom Lights ", icon: "fa-lightbulb" }
+					
+
+					// {id: "camera.tapo_c230_a14d_live_view", name: "Living Room Camera", icon: "fa-video"}
 				],
 				// expose selection control to buttons module
 				enableButtonControl: true
@@ -168,41 +201,76 @@ let config = {
 			}
 		},
 
-		// Physical buttons / keyboard bridge (no UI)
 		{
-			module: "MMM-PhysicalButtons",
-			position: "bottom_right",
+			module: 'MMM-AirGradient',
+			position: 'top_right',
 			config: {
-				gpio: {
-					up: null,
-					down: null,
-					select: null,
-					spotify_next: null,
-					spotify_prev: null,
-					spotify_pause: null
-				},
-				keys: {
-					up: "ArrowUp",
-					down: "ArrowDown",
-					select: "Enter",
-					spotify_next: ">",
-					spotify_prev: "<",
-					spotify_pause: "1"
-				}
+				baseUrl: 'http://localhost:8123',
+				token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJjMDI5M2Q2MTQxMTY0NWQxYjFhMWYyZDdhZGFkOWE1ZCIsImlhdCI6MTc2MzYxNzAzOCwiZXhwIjoyMDc4OTc3MDM4fQ.B8nNYyLLg4r_r26ekCQTIxBGcTboh99rJRWSMR7dmdo', // recommended to provide via server-side env, not client config
+				updateInterval: 15000,
+				// Optional: explicit entities (array) or leave empty to auto-discover by search
+				entities: [],
+				search: 'airgradient'
 			}
 		},
 
-		// Spotify control (responds to BUTTON_PRESS or USER_ACTION)
+		// Home Assistant Plus — richer cards and camera snapshots (server-side)
 		{
-			module: "MMM-SpotifyControl",
-			position: "bottom_center",
+			module: "MMM-HomeAssistantPlus",
+			position: "top_right",
 			config: {
-				clientID: "YOUR_CLIENT_ID_HERE",
-				clientSecret: "YOUR_CLIENT_SECRET_HERE",
-				refreshToken: "YOUR_REFRESH_TOKEN_HERE",
-				accessToken: "YOUR_ACCESS_TOKEN_HERE"
+				baseUrl: "http://localhost:8123",
+				token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJjMDI5M2Q2MTQxMTY0NWQxYjFhMWYyZDdhZGFkOWE1ZCIsImlhdCI6MTc2MzYxNzAzOCwiZXhwIjoyMDc4OTc3MDM4fQ.B8nNYyLLg4r_r26ekCQTIxBGcTboh99rJRWSMR7dmdo",
+				useWebSocket: true,
+				updateInterval: 10000,
+				fallbackEnabled: true, // false to disable fallback entirely
+				fallbackPosition: "top_right", // or top_right / top_left / bottom_left
+				entities: [
+					{id: "camera.tapo_c230_a14d_live_view", name: "Jarvis Cam"}
+					// {id: "light.guest_bedroom_main_lights", name: "Guest Bedroom Lights", icon: "fa-lightbulb"}
+
+					// { id: "camera.living_room", name: "Living Room Cam" },
+					// { id: "sensor.outdoor_temp", name: "Outside Temp" }
+				]
 			}
-		}
+		},
+
+		// // Physical buttons / keyboard bridge (no UI)
+		// {
+		// 	module: "MMM-PhysicalButtons",
+		// 	position: "bottom_right",
+		// 	config: {
+		// 		gpio: {
+		// 			up: null,
+		// 			down: null,
+		// 			select: null,
+		// 			spotify_next: null,
+		// 			spotify_prev: null,
+		// 			spotify_pause: null
+		// 		},
+		// 		keys: {
+		// 			up: "ArrowUp",
+		// 			down: "ArrowDown",
+                
+		// 			select: "Enter",
+		// 			spotify_next: ">",
+		// 			spotify_prev: "<",
+		// 			spotify_pause: "1"
+		// 		}
+		// 	}
+		// },
+
+		// // Spotify control (responds to BUTTON_PRESS or USER_ACTION)
+		// {
+		// 	module: "MMM-SpotifyControl",
+		// 	position: "bottom_center",
+		// 	config: {
+		// 		clientID: "1409bba120724394b7ca3082548c705d",
+		// 		clientSecret: "aa865fb57a2346b592a81c1cce37e790",
+		// 		refreshToken: "AQAwmsFWrsTb38Nx1fPvvtFEfTuRYj8prKryvFAxJDjshByLhGc9fFeRdKUQO3bOF2kzyMrEmK0Hv9zHK-r-bZZjW3pW4cibr-Jw-TixxZAUsSjnh_YhqbF_FeMK3p-iOdg",
+		// 		accessToken: "BQBH0611ihsf0oDT3f5LBBVgIxkCxInC3O297TlGCoJ3MmLjIBPSjrw_ZgbiYviecdUrJ8fH5aTbfrOuJe-wVb35wqTX4uK5MBplT-LhG5-tx4yNGrVCj1CyQ7NTdOAixJtniOgk93Cw7gwX1AZ4S0NIE7_aPQKlHsnh910mrD2TJkQPC5xL_BcnuB6iKMkwluSVVkAgFxfbDDFcVk9gotq872V08zJLKQ32ctSwaANWXpl9VFDe8PM6rjE"
+		// 	}
+		// }
 	]
 };
 

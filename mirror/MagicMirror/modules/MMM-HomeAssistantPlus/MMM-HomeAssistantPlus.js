@@ -190,7 +190,13 @@ Module.register('MMM-HomeAssistantPlus', {
         if ((ent.entity_id || '').startsWith('camera')) {
           const snap = this.data.snapshots && this.data.snapshots[ent.entity_id];
           if (snap) {
-            const img = document.createElement('img'); img.src = 'data:image/jpeg;base64,' + snap; img.style.width = '240px'; img.style.display = 'block'; img.style.marginTop = '6px'; img.style.borderRadius = '4px'; item.appendChild(img);
+            const img = document.createElement('img'); img.src = 'data:image/jpeg;base64,' + snap;
+            img.style.width = '360px';
+            img.style.display = 'block';
+            img.style.marginTop = '6px';
+            img.style.borderRadius = '4px';
+            img.style.objectFit = 'cover';
+            item.appendChild(img);
           }
         }
         fb.appendChild(item);

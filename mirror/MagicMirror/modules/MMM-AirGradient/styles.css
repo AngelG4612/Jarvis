@@ -1,0 +1,8 @@
+.mmm-airgradient { font-family: Roboto, Arial, sans-serif; color: #ddd; }
+.mmm-airgradient .ag-title { font-weight: bold; margin-bottom: 6px; font-size: 1.1em; }
+.mmm-airgradient .ag-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.mmm-airgradient .ag-card { background: rgba(0,0,0,0.35); padding: 8px; border-radius: 6px; width: 200px; box-sizing: border-box; }
+.mmm-airgradient .ag-name { font-weight: bold; margin-bottom: 4px; }
+.mmm-airgradient .ag-value { font-size: 1.4em; margin-bottom: 6px; }
+.mmm-airgradient .ag-attrs { font-size: 0.85em; color: #bbb; }
+.mmm-airgradient .ag-empty { color: #999; }

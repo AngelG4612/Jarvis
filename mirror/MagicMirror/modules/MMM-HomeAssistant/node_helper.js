@@ -29,19 +29,49 @@ module.exports = NodeHelper.create({
     this.subscriptions = new Set();
     this.entitiesCache = {};      // entity_id -> state obj
     this.restIntervalRef = null;
+    // Track multiple front-end instances: moduleId -> { config, lastSeen }
+    this.instances = {};
     this.log("helper started");
   },
 
   socketNotificationReceived(notification, payload) {
     if (notification === "HA_CONFIG") {
+      // payload may be { moduleId, config } for multi-instance support
+      if (payload && payload.moduleId) {
+        const id = payload.moduleId;
+        const cfg = payload.config || {};
+        this.instances[id] = { config: Object.assign({}, cfg), lastSeen: Date.now() };
+        // if this helper has no baseUrl/token yet, seed from the first instance
+        if (!this.config.baseUrl && cfg.baseUrl) this.config.baseUrl = cfg.baseUrl;
+        if (!this.config.token && cfg.token) this.config.token = cfg.token;
+        // ensure WS/REST polling is running
+        if (!this.ws && this.config.useWebSocket) {
+          this.connect();
+        } else if (!this.ws) {
+          this.startRestPolling(this.config.restPollSeconds);
+        }
+        return;
+      }
+      // legacy single-instance config
       this.config = Object.assign({}, this.config, payload || {});
       this.connect();
     } else if (notification === "HA_REQUEST_REFRESH") {
+      // payload may include { moduleId }
+      if (payload && payload.moduleId) {
+        if (this.instances && this.instances[payload.moduleId]) this.instances[payload.moduleId].lastSeen = Date.now();
+      }
       this.refreshOnce();
     } else if (notification === "HA_CALL_SERVICE") {
       this.callService(payload).catch(err =>
-        this.sendSocketNotification("HA_WARN", { message: `Service call failed: ${err.message}` })
+        this.sendSocketNotification("HA_WARN", { message: `Service call failed: ${err.message}`, moduleId: (payload && payload.moduleId) ? payload.moduleId : undefined })
       );
+    } else if (notification === 'HA_REMOVE') {
+      // Unregister a front-end instance
+      if (payload && payload.moduleId && this.instances && this.instances[payload.moduleId]) {
+        delete this.instances[payload.moduleId];
+        // if no instances left, cleanup sockets/polling
+        if (Object.keys(this.instances).length === 0) this.cleanup();
+      }
     }
   },
 
@@ -189,17 +219,23 @@ module.exports = NodeHelper.create({
 
     this.subscriptions = wanted; // possibly empty (means show none until REST prime)
   },
+  
 
   shouldKeep(entityId) {
     return this.subscriptions.size === 0 || this.subscriptions.has(entityId);
   },
 
   ingestStates(allStates) {
-    const configured = Array.isArray(this.config.entities) ? this.config.entities : [];
-    const wantedSet = this.subscriptions.size ? this.subscriptions : new Set(configured.map((e) => e.id));
+    // compute union of all requested entity ids across instances
+    const globalWanted = new Set();
+    Object.keys(this.instances || {}).forEach((id) => {
+      const cfg = this.instances[id].config || {};
+      const ents = Array.isArray(cfg.entities) ? cfg.entities : [];
+      ents.forEach((e) => { if (e && e.id) globalWanted.add(e.id); });
+    });
 
     allStates.forEach((s) => {
-      if (s && wantedSet.has(s.entity_id)) {
+      if (s && globalWanted.has(s.entity_id)) {
         this.entitiesCache[s.entity_id] = {
           state: s.state,
           attributes: s.attributes || {},
@@ -211,19 +247,42 @@ module.exports = NodeHelper.create({
   },
 
   pushUpdate() {
-    // clone a plain object for the front-end
-    const payload = {};
-    Object.keys(this.entitiesCache).forEach((id) => {
-      const s = this.entitiesCache[id];
-      if (!s) return;
-      payload[id] = {
-        entity_id: id,
-        state: s.state,
-        attributes: s.attributes || {},
-        last_changed: s.last_changed || null
-      };
-    });
-    this.sendSocketNotification("HA_STATES", payload);
+    // For multi-instance support: send a scoped payload to each registered instance
+    const instances = this.instances || {};
+    if (!instances || Object.keys(instances).length === 0) {
+      // legacy: send full payload
+      const payload = {};
+      Object.keys(this.entitiesCache).forEach((id) => {
+        const s = this.entitiesCache[id];
+        if (!s) return;
+        payload[id] = {
+          entity_id: id,
+          state: s.state,
+          attributes: s.attributes || {},
+          last_changed: s.last_changed || null
+        };
+      });
+      this.sendSocketNotification("HA_STATES", { moduleId: null, data: payload });
+      return;
+    }
+
+    for (const moduleId of Object.keys(instances)) {
+      const cfg = instances[moduleId].config || {};
+      const wanted = new Set(Array.isArray(cfg.entities) ? cfg.entities.map(e => e.id) : []);
+      const payload = {};
+      Object.keys(this.entitiesCache).forEach((id) => {
+        if (!wanted.has(id)) return;
+        const s = this.entitiesCache[id];
+        if (!s) return;
+        payload[id] = {
+          entity_id: id,
+          state: s.state,
+          attributes: s.attributes || {},
+          last_changed: s.last_changed || null
+        };
+      });
+      this.sendSocketNotification("HA_STATES", { moduleId, data: payload });
+    }
   },
 
   async refreshOnce() {
