@@ -13,6 +13,7 @@ Module.register("MMM-SpotifyPlayer", {
     this.state = null; // full player state from /v1/me/player
     this.error = null;
     this.progressTimer = null; // for per-second progress updates
+    this.selectedControl = 0; // index of currently selected control (prev, play, next)
     this.sendSocketNotification('SPOTIFY_PLAYER_CONFIG', this.config);
     // Ask helper to refresh initially and then regularly
     this.sendSocketNotification('SPOTIFY_PLAYER_REFRESH');
@@ -116,6 +117,18 @@ Module.register("MMM-SpotifyPlayer", {
     return btn;
   },
 
+  // Helper: build a control element but include index so selection can be highlighted
+  createIndexedControl(iconClass, action, title, idx) {
+    const btn = this.createControl(iconClass, action, title);
+    btn.dataset.action = action;
+    btn.dataset.idx = String(idx);
+    if (this.selectedControl === idx) btn.classList.add('selected');
+    // update selection on focus/click
+    btn.addEventListener('focus', () => { this.selectedControl = idx; this.updateDom(0); });
+    btn.addEventListener('click', () => { this.selectedControl = idx; this.updateDom(0); });
+    return btn;
+  },
+
   getDom() {
     const wrapper = document.createElement('div');
     wrapper.className = 'mmm-spotify-player rich';
@@ -169,10 +182,12 @@ Module.register("MMM-SpotifyPlayer", {
 
     // right: controls
     const right = document.createElement('div'); right.className = 'sp-right';
-    const prev = this.createControl('fa-backward', 'spotify_prev', 'Previous');
+    const prev = this.createIndexedControl('fa-backward', 'spotify_prev', 'Previous', 0);
     const playIcon = isPlaying ? 'fa-pause' : 'fa-play';
-    const play = this.createControl(playIcon, isPlaying ? 'spotify_pause' : 'spotify_play', isPlaying ? 'Pause' : 'Play');
-    const next = this.createControl('fa-forward', 'spotify_next', 'Next');
+    // use explicit play/pause on click, selection will toggle via select
+    const playAction = isPlaying ? 'spotify_pause' : 'spotify_play';
+    const play = this.createIndexedControl(playIcon, playAction, isPlaying ? 'Pause' : 'Play', 1);
+    const next = this.createIndexedControl('fa-forward', 'spotify_next', 'Next', 2);
     right.appendChild(prev);
     right.appendChild(play);
     right.appendChild(next);
@@ -206,8 +221,8 @@ Module.register("MMM-SpotifyPlayer", {
   stop() {
     this.stopProgressTimer();
     if (this.updateIntervalRef) clearInterval(this.updateIntervalRef);
-  }
-,
+  },
+
   updateProgressUI() {
     if (typeof document === 'undefined' || !this.identifier) return;
     const moduleWrapper = document.getElementById(this.identifier);
@@ -229,5 +244,40 @@ Module.register("MMM-SpotifyPlayer", {
     if (fill) fill.style.width = pct + '%';
     if (timeLeft) timeLeft.textContent = this.formatTime(elapsed);
     if (timeRight) timeRight.textContent = this.formatTime(durationMs);
+  },
+
+  notificationReceived(notification, payload, sender) {
+    // handle keyboard / button bridge events
+    if (notification === 'BUTTON_PRESS' || notification === 'USER_ACTION') {
+      const action = payload && payload.action;
+      if (!action) return;
+      // navigation: up/down/left/right or ha_prev/ha_next synonyms
+      if (action === 'up' || action === 'ha_prev' || action === 'left') {
+        this.selectedControl = Math.max(0, this.selectedControl - 1);
+        this.updateDom(0);
+        return;
+      }
+      if (action === 'down' || action === 'ha_next' || action === 'right') {
+        this.selectedControl = Math.min(2, this.selectedControl + 1);
+        this.updateDom(0);
+        return;
+      }
+      if (action === 'select' || action === 'enter') {
+        // perform the selected control action
+        const map = [ 'spotify_prev', (this.state && this.state.is_playing) ? 'spotify_pause' : 'spotify_play', 'spotify_next' ];
+        const act = map[this.selectedControl] || 'spotify_toggle';
+        this.sendNotification('USER_ACTION', { action: act });
+        try { this.sendSocketNotification('SPOTIFY_PLAYER_REFRESH'); setTimeout(()=>this.sendSocketNotification('SPOTIFY_PLAYER_REFRESH'),700); } catch(e){}
+        return;
+      }
+      // If action is direct spotify control, let it pass through (module may refresh itself)
+      if (action.startsWith && action.startsWith('spotify')) {
+        // update selection to nearest control
+        if (action === 'spotify_prev') this.selectedControl = 0;
+        if (action === 'spotify_next') this.selectedControl = 2;
+        if (action === 'spotify_play' || action === 'spotify_pause' || action === 'spotify_toggle') this.selectedControl = 1;
+        this.updateDom(0);
+      }
+    }
   }
 });

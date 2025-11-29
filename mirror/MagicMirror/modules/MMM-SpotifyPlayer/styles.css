@@ -1,0 +1,12 @@
+.mmm-spotify-player { display:flex; gap:12px; align-items:center; color:#fff; }
+.mmm-spotify-player .sp-left { width:80px; }
+.mmm-spotify-player .sp-art { width:72px; height:72px; object-fit:cover; border-radius:6px; }
+.mmm-spotify-player .sp-middle { flex:1; min-width:200px; }
+.mmm-spotify-player .sp-title { font-weight:700; font-size:1.1em; }
+.mmm-spotify-player .sp-artists, .mmm-spotify-player .sp-album { opacity:0.85; font-size:0.9em; }
+.mmm-spotify-player .sp-right { display:flex; gap:8px; }
+.mmm-spotify-player .sp-ctrl { background:rgba(255,255,255,0.06); color:#fff; border:0; padding:8px 10px; border-radius:6px; cursor:pointer; }
+.mmm-spotify-player .sp-ctrl.selected { outline:3px solid #2b90ff; box-shadow:0 0 8px rgba(43,144,255,0.3); }
+.mmm-spotify-player .sp-bar { height:8px; background:rgba(255,255,255,0.06); border-radius:4px; overflow:hidden; }
+.mmm-spotify-player .sp-bar-fill { height:100%; background:#2b90ff; width:0%; }
+.mmm-spotify-player .sp-time-left, .mmm-spotify-player .sp-time-right { font-size:0.85em; opacity:0.9; }

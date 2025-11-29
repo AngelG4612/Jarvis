@@ -1,135 +1,132 @@
-/* node_helper for Spotify control */
+/* Minimal, correct node_helper for Spotify control */
 const NodeHelper = require('node_helper');
-const fetch = (...args) => import('node-fetch').then(({default: f}) => f(...args));
+const fs = require('fs');
+const path = require('path');
 
-function base64Encode(s) { return Buffer.from(s).toString('base64'); }
+let fetchFn = null;
+try {
+  if (typeof fetch !== 'undefined') fetchFn = fetch;
+  else {
+    const nf = require('node-fetch');
+    fetchFn = nf && (nf.default || nf);
+  }
+} catch (e) {
+  // fetch may be unavailable; ensureToken/api will throw with clear message
+}
+
+function base64Encode(s) { return Buffer.from(String(s)).toString('base64'); }
 
 module.exports = NodeHelper.create({
   start() {
     this.config = {};
     this.accessToken = null;
     this.expiry = 0;
+    this._refreshPromise = null;
+    this.tokensFile = path.join(this.path || process.cwd(), '.spotify_tokens.json');
     this.log('SpotifyControl helper started');
   },
 
   socketNotificationReceived(notification, payload) {
-    this.log(`socketNotificationReceived: ${notification} ${payload ? JSON.stringify(payload) : ''}`);
-    if (notification === 'SPOTIFY_CONFIG') {
-      this.config = Object.assign({}, this.config, payload || {});
-      if (this.config.accessToken) {
-        this.accessToken = this.config.accessToken;
-      }
+    if (notification === 'SPOTIFY_CONFIG' && payload && typeof payload === 'object') {
+      Object.assign(this.config, payload);
+      try { fs.writeFileSync(this.tokensFile, JSON.stringify({ refreshToken: this.config.refreshToken }), { mode: 0o600 }); } catch (e) {}
       return;
     }
-    if (notification === 'BUTTON_PRESS' || notification === 'USER_ACTION') {
+    if (notification === 'SPOTIFY_REFRESH_NOW') {
+      (async () => {
+        try { await this.ensureToken(); this.sendSocketNotification('SPOTIFY_REFRESH_RESULT', { success: true, expiry: this.expiry }); }
+        catch (e) { this.sendSocketNotification('SPOTIFY_REFRESH_RESULT', { success: false, error: e.message }); }
+      })();
+      return;
+    }
+    if (notification === 'USER_ACTION' || notification === 'BUTTON_PRESS') {
       const action = payload && payload.action;
-      this.log('Received action: ' + action);
-      this.handleAction(action).then(() => {
-        this.log('Action completed: ' + action);
-      }).catch(err => this.log('Action error: ' + err.message));
+      this.handleAction(action).catch(e => this.log('Action error: ' + e.message));
     }
   },
 
   async ensureToken() {
+    if (!fetchFn) throw new Error('fetch not available; install node-fetch or use Node.js 18+');
     const now = Date.now() / 1000;
     if (this.accessToken && this.expiry > now + 30) return this.accessToken;
-    if (this.config.accessToken) {
-      this.accessToken = this.config.accessToken;
-      // no expiry info - assume valid short term
-      this.expiry = now + 300;
-      return this.accessToken;
-    }
-    // Support environment variable fallbacks for safer secret storage
-    this.config.clientID = this.config.clientID || process.env.SPOTIFY_CLIENT_ID || process.env.CLIENT_ID || null;
-    this.config.clientSecret = this.config.clientSecret || process.env.SPOTIFY_CLIENT_SECRET || process.env.CLIENT_SECRET || null;
-    this.config.refreshToken = this.config.refreshToken || process.env.SPOTIFY_REFRESH_TOKEN || process.env.REFRESH_TOKEN || null;
 
+    this.config.clientID = this.config.clientID || process.env.SPOTIFY_CLIENT_ID;
+    this.config.clientSecret = this.config.clientSecret || process.env.SPOTIFY_CLIENT_SECRET;
+    this.config.refreshToken = this.config.refreshToken || process.env.SPOTIFY_REFRESH_TOKEN;
+
+    try { if (!this.config.refreshToken && fs.existsSync(this.tokensFile)) { const p = JSON.parse(fs.readFileSync(this.tokensFile, 'utf8') || '{}'); if (p && p.refreshToken) this.config.refreshToken = p.refreshToken; } } catch (e) {}
+
+    // Best-effort: try to extract credentials from global MagicMirror config file as a fallback
     if (!this.config.clientID || !this.config.clientSecret || !this.config.refreshToken) {
-      throw new Error('Missing Spotify credentials (clientID, clientSecret, refreshToken or accessToken)');
+      try {
+        const cfgPath = path.resolve(this.path || process.cwd(), '..', 'config', 'config.js');
+        if (fs.existsSync(cfgPath)) {
+          const cfgRaw = fs.readFileSync(cfgPath, 'utf8');
+          const extract = (key) => {
+            const re = new RegExp(key + "\\s*:\\s*[\"']([^\"']+)[\"']");
+            const m = cfgRaw.match(re);
+            return m ? m[1] : null;
+          };
+          if (!this.config.clientID) this.config.clientID = extract('clientID');
+          if (!this.config.clientSecret) this.config.clientSecret = extract('clientSecret');
+          if (!this.config.refreshToken) this.config.refreshToken = extract('refreshToken');
+          if (this.config.clientID || this.config.clientSecret || this.config.refreshToken) this.log('Recovered Spotify credentials from config.js (best-effort)');
+        }
+      } catch (e) { /* ignore */ }
     }
-    const body = new URLSearchParams();
-    body.append('grant_type','refresh_token');
-    body.append('refresh_token', this.config.refreshToken);
 
-    const resp = await fetch('https://accounts.spotify.com/api/token', {
-      method: 'POST',
-      headers: {
-        Authorization: 'Basic ' + base64Encode(`${this.config.clientID}:${this.config.clientSecret}`),
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      body: body.toString()
-    });
-    if (!resp.ok) throw new Error('Token refresh failed ' + resp.status);
-    const data = await resp.json();
-    this.accessToken = data.access_token;
-    this.expiry = now + (data.expires_in || 3600);
-    this.log('Obtained Spotify access token');
-    return this.accessToken;
+    if (!this.config.clientID || !this.config.clientSecret || !this.config.refreshToken) throw new Error('Missing Spotify credentials for refresh');
+
+    if (this._refreshPromise) return await this._refreshPromise;
+
+    this._refreshPromise = (async () => {
+      const body = new URLSearchParams(); body.append('grant_type', 'refresh_token'); body.append('refresh_token', this.config.refreshToken);
+      const resp = await fetchFn('https://accounts.spotify.com/api/token', { method: 'POST', headers: { Authorization: 'Basic ' + base64Encode(`${this.config.clientID}:${this.config.clientSecret}`), 'Content-Type': 'application/x-www-form-urlencoded' }, body: body.toString() });
+      const txt = await resp.text(); if (!resp.ok) throw new Error('Token refresh failed: ' + txt);
+      const data = JSON.parse(txt);
+      this.accessToken = data.access_token; this.expiry = Date.now() / 1000 + (data.expires_in || 3600);
+      if (data.refresh_token) this.config.refreshToken = data.refresh_token;
+      try { fs.writeFileSync(this.tokensFile, JSON.stringify({ accessToken: this.accessToken, expiry: this.expiry, refreshToken: this.config.refreshToken }), { mode: 0o600 }); } catch (e) {}
+      return this.accessToken;
+    })();
+
+    try { return await this._refreshPromise; } finally { this._refreshPromise = null; }
   },
 
   async api(method, path, body) {
+    if (!fetchFn) throw new Error('fetch not available');
     const token = await this.ensureToken();
     const opts = { method, headers: { Authorization: `Bearer ${token}` } };
-    if (body) {
-      opts.headers['Content-Type'] = 'application/json';
-      opts.body = JSON.stringify(body);
-    }
+    if (body) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
     const url = 'https://api.spotify.com' + path;
-    let r = await fetch(url, opts);
-    // If token expired/invalid (401), try one refresh and retry the request once.
+    let r = await fetchFn(url, opts);
     if (r.status === 401) {
-      this.log(`Spotify API 401 for ${method} ${path} — attempting token refresh and retry`);
-      // invalidate and refresh
-      this.accessToken = null;
-      try {
-        await this.ensureToken();
-      } catch (e) {
-        // couldn't refresh
-        const txt = await r.text().catch(()=>'<no body>');
-        throw new Error(`Spotify API ${r.status}: ${txt} (token refresh failed: ${e.message})`);
-      }
-      // update Authorization header and retry once
-      opts.headers.Authorization = `Bearer ${this.accessToken}`;
-      r = await fetch(url, opts);
+      this.accessToken = null; await this.ensureToken(); opts.headers.Authorization = `Bearer ${this.accessToken}`; r = await fetchFn(url, opts);
     }
-
-    if (!r.ok && r.status !== 204) {
-      const txt = await r.text();
-      throw new Error(`Spotify API ${r.status}: ${txt}`);
-    }
-    if (r.status === 204) return null;
-    return r.json();
+    const txt = await r.text().catch(() => null);
+    if (!r.ok && r.status !== 204) throw new Error(`Spotify API ${r.status}: ${txt || '<no body>'}`);
+    if (r.status === 204) return null; try { return JSON.parse(txt); } catch (e) { return txt; }
   },
 
   async handleAction(action) {
     if (!action) return;
-    this.log('handleAction: ' + action);
-    switch(action) {
-      case 'spotify_next':
-        await this.api('POST','/v1/me/player/next');
-        break;
-      case 'spotify_prev':
-        await this.api('POST','/v1/me/player/previous');
-        break;
-      case 'spotify_pause':
-        await this.api('PUT','/v1/me/player/pause');
-        break;
-      case 'spotify_play':
-        await this.api('PUT','/v1/me/player/play');
-        break;
-      case 'spotify_toggle':
-        // get playback state, then pause or play
-        try {
-          const state = await this.api('GET','/v1/me/player');
-          if (state && state.is_playing) await this.api('PUT','/v1/me/player/pause'); else await this.api('PUT','/v1/me/player/play');
-        } catch (e) {
-          // if error, attempt play
-          await this.api('PUT','/v1/me/player/play');
-        }
-        break;
-      default:
-        // ignore
-        break;
+    // Map common button names to spotify actions (physical buttons often emit 'up','down','select')
+    const actionMap = {
+      down: 'spotify_next',
+      up: 'spotify_prev',
+      select: 'spotify_toggle',
+      enter: 'spotify_toggle',
+      next: 'spotify_next',
+      prev: 'spotify_prev'
+    };
+    if (actionMap[action]) action = actionMap[action];
+
+    switch (action) {
+      case 'spotify_next': await this.api('POST', '/v1/me/player/next'); break;
+      case 'spotify_prev': await this.api('POST', '/v1/me/player/previous'); break;
+      case 'spotify_pause': await this.api('PUT', '/v1/me/player/pause'); break;
+      case 'spotify_play': await this.api('PUT', '/v1/me/player/play'); break;
+      default: this.log('Unknown action: ' + action); break;
     }
   },
 

@@ -9,7 +9,12 @@ Module.register("MMM-SpotifyControl", {
   },
 
   start() {
-    this.sendSocketNotification("SPOTIFY_CONFIG", this.config);
+    // Send only defined config values to avoid overwriting server-side persisted credentials with nulls
+    const cfg = {};
+    ['clientID','clientSecret','refreshToken','accessToken','rateLimit'].forEach(k => {
+      if (this.config[k] !== null && this.config[k] !== undefined) cfg[k] = this.config[k];
+    });
+    this.sendSocketNotification("SPOTIFY_CONFIG", cfg);
   }
 ,
 

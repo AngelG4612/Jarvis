@@ -1,0 +1,8 @@
+.mmm-physical-buttons { font-family: sans-serif; color: #fff; }
+.mmm-physical-buttons .pb-header { font-weight: bold; margin-bottom: 6px; }
+.mmm-physical-buttons .pb-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+.mmm-physical-buttons .pb-btn { background: rgba(255,255,255,0.06); color: #fff; border: 1px solid rgba(255,255,255,0.08); padding: 6px 10px; border-radius: 6px; cursor: pointer; }
+.mmm-physical-buttons .pb-btn.pressed { background: #2b90ff; border-color: #2b90ff; transform: translateY(1px); }
+.mmm-physical-buttons .pb-none { opacity: 0.7; }
+
+.mmm-physical-buttons .pb-debug { margin-top: 8px; font-size: 0.85em; opacity: 0.9; }
