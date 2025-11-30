@@ -17,10 +17,15 @@ Module.register("MMM-PhysicalButtons", {
       up: "ArrowUp",
       down: "ArrowDown",
       select: "Enter",
+      // key to cycle focus between control-capable modules
+      switch: "Tab",
       spotify_next: ">",
       spotify_prev: "<",
       spotify_pause: " "
     }
+    ,
+    // modules that can be focused/controlled via the module switcher
+    controlModules: [ 'MMM-SpotifyPlayer', 'MMM-HomeAssistant' ]
   },
 
   start() {
@@ -30,6 +35,11 @@ Module.register("MMM-PhysicalButtons", {
     this.updateDom(0);
     // Attach front-end keyboard listener so browser key presses trigger actions
     this._bindKeyboard();
+    // control modules and focus state
+    this.controlModules = Array.isArray(this.config.controlModules) ? this.config.controlModules : [];
+    this.focusIndex = 0;
+    // announce initial focus after UI is ready
+    setTimeout(() => { this._announceFocus(); }, 300);
   }
   ,
   // Map of active DOM keyboard handler so we can remove it on stop
@@ -45,16 +55,18 @@ Module.register("MMM-PhysicalButtons", {
           const mapped = keys[action];
           if (!mapped) continue;
           if (String(mapped) === String(key) || mapped === key) {
-            // simulate a press
-            this.sendNotification('BUTTON_PRESS', { action });
-            // If this action is a direct spotify control, also emit USER_ACTION
-            try { if (typeof action === 'string' && action.startsWith && action.startsWith('spotify')) this.sendNotification('USER_ACTION', { action }); } catch (e) {}
-            this._flashButton(action);
-            // update debug
-            this._dbg = { last: action, when: Date.now() };
-            this.updateDom(0);
-            ev.preventDefault();
-            return;
+                // simulate a press
+                this.sendNotification('BUTTON_PRESS', { action });
+                // If this action is a direct spotify control, also emit USER_ACTION
+                try { if (typeof action === 'string' && action.startsWith && action.startsWith('spotify')) this.sendNotification('USER_ACTION', { action }); } catch (e) {}
+                // If this is the configured module switch key, toggle focus
+                try { if (action === 'switch') { this._switchModule(); this._dbg = { last: 'switch', when: Date.now() }; this.updateDom(0); ev.preventDefault(); return; } } catch (e) {}
+                this._flashButton(action);
+                // update debug
+                this._dbg = { last: action, when: Date.now() };
+                this.updateDom(0);
+                ev.preventDefault();
+                return;
           }
         }
       } catch (e) { Log.warn('kb handler error: ' + e.message); }
@@ -82,12 +94,34 @@ Module.register("MMM-PhysicalButtons", {
       try { this.sendNotification('BUTTON_PRESS', payload); } catch (e) {}
       // If helper sent an explicit spotify control, also forward as USER_ACTION
       try { const a = payload && payload.action; if (typeof a === 'string' && a.startsWith && a.startsWith('spotify')) this.sendNotification('USER_ACTION', { action: a }); } catch (e) {}
+      // If helper sent a module switch action, handle it here
+      try { const a = payload && payload.action; if (a === 'switch') { this._switchModule(); return; } } catch (e) {}
       // update UI highlight
       try {
         const action = payload && payload.action;
         if (action) this._flashButton(action);
       } catch (e) { Log.warn('flashButton error: ' + (e && e.message)); }
     }
+  },
+
+  _announceFocus() {
+    try {
+      if (!this.controlModules || this.controlModules.length === 0) return;
+      // Ensure we send a trimmed string value so modules can match exactly
+      let mod = this.controlModules[this.focusIndex];
+      try { mod = (typeof mod !== 'undefined' && mod !== null) ? String(mod).trim() : mod; } catch (e) {}
+      this.sendNotification('MODULE_FOCUS', { module: mod });
+      this._dbg = { last: `focus:${mod}`, when: Date.now() };
+      this.updateDom(0);
+    } catch (e) {}
+  },
+
+  _switchModule() {
+    try {
+      if (!this.controlModules || this.controlModules.length === 0) return;
+      this.focusIndex = (this.focusIndex + 1) % this.controlModules.length;
+      this._announceFocus();
+    } catch (e) {}
   },
 
   // Flash/highlight the button in the UI for a short time
@@ -107,6 +141,8 @@ Module.register("MMM-PhysicalButtons", {
       this.sendNotification('BUTTON_PRESS', { action });
       // If this is a direct spotify control button, also broadcast as USER_ACTION
       try { if (typeof action === 'string' && action.startsWith && action.startsWith('spotify')) this.sendNotification('USER_ACTION', { action }); } catch (e) {}
+      // If this is the module switch UI button, do the switch
+      try { if (action === 'switch') { this._switchModule(); return; } } catch (e) {}
       // also locally flash the button
       this._flashButton(action);
       // update debug indicator
