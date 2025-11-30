@@ -1,15 +1,19 @@
-.mmm-spotify-player { display:flex; gap:12px; align-items:center; color:#fff; }
-.mmm-spotify-player .sp-left { width:80px; }
-.mmm-spotify-player .sp-art { width:72px; height:72px; object-fit:cover; border-radius:6px; }
-.mmm-spotify-player .sp-middle { flex:1; min-width:200px; }
-.mmm-spotify-player .sp-title { font-weight:700; font-size:1.1em; }
-.mmm-spotify-player .sp-artists, .mmm-spotify-player .sp-album { opacity:0.85; font-size:0.9em; }
-.mmm-spotify-player .sp-right { display:flex; gap:8px; }
-.mmm-spotify-player .sp-ctrl { background:rgba(255,255,255,0.06); color:#fff; border:0; padding:8px 10px; border-radius:6px; cursor:pointer; }
-.mmm-spotify-player .sp-ctrl.selected { outline:3px solid #2b90ff; box-shadow:0 0 8px rgba(43,144,255,0.3); }
-.mmm-spotify-player .sp-bar { height:8px; background:rgba(255,255,255,0.06); border-radius:4px; overflow:hidden; }
+/* New layout: artwork on top, centered content below */
+.mmm-spotify-player { display:flex; flex-direction:column; gap:12px; align-items:center; color:#fff; padding:12px; }
+.mmm-spotify-player .sp-left { width:auto; }
+.mmm-spotify-player .sp-art { width:280px; height:280px; object-fit:cover; border-radius:10px; box-shadow:0 8px 24px rgba(0,0,0,0.45); }
+.mmm-spotify-player .sp-middle { width:100%; max-width:520px; text-align:center; }
+.mmm-spotify-player .sp-title { font-weight:700; font-size:1.25em; margin-top:6px; }
+.mmm-spotify-player .sp-artists, .mmm-spotify-player .sp-album { opacity:0.95; font-size:1em; margin-top:3px; }
+.mmm-spotify-player .sp-right { display:flex; gap:12px; margin-top:8px; }
+.mmm-spotify-player .sp-ctrl { background:rgba(255,255,255,0.06); color:#fff; border:0; padding:10px 12px; border-radius:8px; cursor:pointer; }
+.mmm-spotify-player .sp-ctrl.selected { outline:3px solid #2b90ff; box-shadow:0 0 12px rgba(43,144,255,0.35); }
+.mmm-spotify-player .sp-bar { height:10px; background:rgba(255,255,255,0.06); border-radius:6px; overflow:hidden; width:100%; max-width:520px; margin-top:8px; }
 .mmm-spotify-player .sp-bar-fill { height:100%; background:#2b90ff; width:0%; }
-.mmm-spotify-player .sp-time-left, .mmm-spotify-player .sp-time-right { font-size:0.85em; opacity:0.9; }
+.mmm-spotify-player .sp-time-left, .mmm-spotify-player .sp-time-right { font-size:0.9em; opacity:0.95; }
+
+/* Make sure the focus badge sits above content when present */
+.mmm-spotify-player .sp-focus-badge { z-index:5; }
 
 /* Focused module highlight */
 .mmm-spotify-player.focused { position: relative; box-shadow: 0 8px 24px rgba(0,0,0,0.45); border-radius: 8px; }
