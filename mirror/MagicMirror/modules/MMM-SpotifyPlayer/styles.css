@@ -10,3 +10,7 @@
 .mmm-spotify-player .sp-bar { height:8px; background:rgba(255,255,255,0.06); border-radius:4px; overflow:hidden; }
 .mmm-spotify-player .sp-bar-fill { height:100%; background:#2b90ff; width:0%; }
 .mmm-spotify-player .sp-time-left, .mmm-spotify-player .sp-time-right { font-size:0.85em; opacity:0.9; }
+
+/* Focused module highlight */
+.mmm-spotify-player.focused { position: relative; box-shadow: 0 8px 24px rgba(0,0,0,0.45); border-radius: 8px; }
+.sp-focus-badge { position: absolute; right: 6px; top: 6px; background: #2b90ff; color: #fff; padding: 3px 7px; border-radius: 10px; font-weight: 700; font-size: 0.75em; box-shadow: 0 2px 6px rgba(0,0,0,0.25); }
