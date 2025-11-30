@@ -6,6 +6,12 @@ Module.register("MMM-SpotifyPlayer", {
     clientID: null,
     clientSecret: null,
     refreshToken: null
+    ,
+    // allow this module to be included in the module focus cycle
+    enableControl: true
+    ,
+    // Visible controls: set to false in module config to prevent rendering
+    visible: true
   },
 
   start() {
@@ -18,6 +24,8 @@ Module.register("MMM-SpotifyPlayer", {
     // Ask helper to refresh initially and then regularly
     this.sendSocketNotification('SPOTIFY_PLAYER_REFRESH');
     this.updateIntervalRef = setInterval(() => this.sendSocketNotification('SPOTIFY_PLAYER_REFRESH'), this.config.updateInterval || 5000);
+    // focus/state for module-level control
+    this.controlFocused = false;
   },
 
   socketNotificationReceived(notification, payload) {
@@ -134,8 +142,13 @@ Module.register("MMM-SpotifyPlayer", {
   },
 
   getDom() {
+    // If configured to be hidden, short-circuit rendering and return an empty node.
+    if (this.config && this.config.visible === false) {
+      try { const n = document.createElement('div'); n.style.display = 'none'; return n; } catch (e) { return document.createElement('div'); }
+    }
     const wrapper = document.createElement('div');
     wrapper.className = 'mmm-spotify-player rich';
+    if (this.controlFocused) wrapper.classList.add('focused');
     this.updateDomStyles();
 
     if (this.loading) {
@@ -200,6 +213,14 @@ Module.register("MMM-SpotifyPlayer", {
     wrapper.appendChild(mid);
     wrapper.appendChild(right);
 
+    // show a small badge when this module has control focus
+    if (this.controlFocused) {
+      const b = document.createElement('div');
+      b.className = 'sp-focus-badge';
+      b.textContent = 'CONTROLLED';
+      wrapper.appendChild(b);
+    }
+
     return wrapper;
   },
 
@@ -251,6 +272,17 @@ Module.register("MMM-SpotifyPlayer", {
   },
 
   notificationReceived(notification, payload, sender) {
+    // Module focus control: enable/disable control handling for this module
+    if (notification === 'MODULE_FOCUS') {
+      const mod = payload && payload.module;
+      // Accept either module name (e.g. 'MMM-SpotifyPlayer') or a
+      // specific instance identifier (this.identifier) so multiple
+      // instances can be distinguished in `controlModules`.
+      const match = (mod === this.name) || (mod === this.identifier);
+      this.controlFocused = !!(match && this.config.enableControl !== false);
+      this.updateDom(0);
+      return;
+    }
     // handle keyboard / button bridge events
     const isButton = (notification === 'BUTTON_PRESS');
     const isUserAction = (notification === 'USER_ACTION');
@@ -259,8 +291,9 @@ Module.register("MMM-SpotifyPlayer", {
     if (!action) return;
 
     // Only treat navigation from physical button presses or from this module's own UI
+    // and only when this module currently has control focus
     const isLocalUI = (isUserAction && sender && sender.name === this.name);
-    if (isButton || isLocalUI) {
+    if ((isButton || isLocalUI) && this.controlFocused) {
       // navigation: up/down/left/right — only change selection here
       if (action === 'up' || action === 'left') {
         this.selectedControl = Math.max(0, this.selectedControl - 1);
