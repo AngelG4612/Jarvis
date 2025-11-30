@@ -15,6 +15,9 @@ Module.register("MMM-HomeAssistant", {
     ],
     // New: enable responding to external button events
     enableButtonControl: true
+    ,
+    // allow this module to be included in the module focus cycle
+    enableControl: true
   },
 
   start() {
@@ -22,9 +25,13 @@ Module.register("MMM-HomeAssistant", {
     this.loaded = false;
     this.selectedIndex = 0; // which row is currently selected
     this.records = [];
+    this.controlFocused = false;
     try {
       this.sendSocketNotification("HA_CONFIG", { moduleId: this.identifier, config: this.config });
     } catch (e) {}
+    // Helpful debug: log this module instance identifier so users can target
+    // specific instances in `controlModules` (e.g. 'MMM-HomeAssistant-0').
+    try { Log.info('MMM-HomeAssistant: identifier=' + this.identifier); } catch (e) {}
   },
 
   // Compute a simple render key for the configured records (ids, names, icons)
@@ -66,10 +73,19 @@ Module.register("MMM-HomeAssistant", {
   getDom() {
     const wrapper = document.createElement("div");
     wrapper.className = "mmm-ha";
+    if (this.controlFocused) wrapper.classList.add('focused');
 
     const heading = document.createElement("div");
     heading.className = "mmm-ha-title";
     heading.textContent = this.config.title;
+    // show a small badge when this module has control focus
+    if (this.controlFocused) {
+      const badge = document.createElement('span');
+      badge.className = 'ha-focus-badge';
+      badge.textContent = 'CONTROLLED';
+      heading.appendChild(document.createTextNode(' '));
+      heading.appendChild(badge);
+    }
     wrapper.appendChild(heading);
 
     const list = document.createElement("div");
@@ -216,7 +232,33 @@ Module.register("MMM-HomeAssistant", {
     } else if (notification === "BUTTON_PRESS" && this.config.enableButtonControl) {
       // payload: { action: 'up'|'down'|'toggle'|'select'|'spotify_next' ... }
       const action = payload && payload.action;
-      this.handleButton(action);
+      if (this.controlFocused) this.handleButton(action);
+    }
+  },
+
+  notificationReceived(notification, payload, sender) {
+    // Handle module focus switching and front-end button presses
+    if (notification === 'MODULE_FOCUS') {
+      // Normalize the incoming module identifier and match flexibly.
+      const raw = payload && payload.module;
+      const mod = (typeof raw !== 'undefined' && raw !== null) ? String(raw).trim() : null;
+      let match = false;
+      if (mod) {
+        // Direct matches
+        if (mod === this.name || mod === this.identifier) match = true;
+        // Allow cases where the provided string contains the identifier (e.g. extra prefix/suffix)
+        else if (this.identifier && String(this.identifier).indexOf(mod) !== -1) match = true;
+        else if (mod.indexOf(this.identifier) !== -1) match = true;
+        // Case-insensitive module-name match as fallback
+        else if (mod.toLowerCase() === String(this.name).toLowerCase()) match = true;
+      }
+      this.controlFocused = !!(match && this.config.enableControl !== false);
+      this.updateDom(0);
+      return;
+    }
+    if (notification === 'BUTTON_PRESS' && this.config.enableButtonControl) {
+      const action = payload && payload.action;
+      if (this.controlFocused) this.handleButton(action);
     }
   },
 
@@ -242,7 +284,13 @@ Module.register("MMM-HomeAssistant", {
         if (!rec || !rec.id) return;
         const domain = (rec.id.split(".")[0] || "").toLowerCase();
         // Use 'toggle' where supported; otherwise try turn_on/turn_off fallback is not implemented here.
-  this.sendSocketNotification("HA_CALL_SERVICE", { moduleId: this.identifier, domain, service: "toggle", data: { entity_id: rec.id } });
+        try {
+          this.sendSocketNotification("HA_CALL_SERVICE", { moduleId: this.identifier, domain, service: "toggle", data: { entity_id: rec.id } });
+        } catch (e) {}
+        // Request an immediate refresh so the UI updates without waiting for the next poll
+        try { this.sendSocketNotification("HA_REQUEST_REFRESH", { moduleId: this.identifier }); } catch (e) {}
+        // Also schedule a small delayed refresh to ensure backend has applied the change
+        try { setTimeout(() => { try { this.sendSocketNotification("HA_REQUEST_REFRESH", { moduleId: this.identifier }); } catch (e) {} }, 800); } catch (e) {}
         break;
       default:
         // Unhandled actions may be relevant to other modules (spotify etc.) - re-broadcast globally
