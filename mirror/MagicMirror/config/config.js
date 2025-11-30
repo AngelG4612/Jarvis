@@ -247,6 +247,7 @@ let config = {
 					spotify_prev: null,
 					spotify_pause: null
 				},
+				// keyboard fallback for local testing: map actions to key codes or key names
 				keys: {
 					up: "ArrowUp",
 					down: "ArrowDown",

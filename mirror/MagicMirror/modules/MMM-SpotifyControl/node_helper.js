@@ -39,7 +39,12 @@ module.exports = NodeHelper.create({
       })();
       return;
     }
-    if (notification === 'USER_ACTION' || notification === 'BUTTON_PRESS') {
+    // Only handle USER_ACTION socket notifications. We no longer respond to
+    // raw BUTTON_PRESS socket notifications here to avoid reacting to global
+    // BUTTON_PRESS messages emitted by other helpers (e.g. MMM-PhysicalButtons).
+    // Physical button presses should be forwarded via the front-end as
+    // USER_ACTION when appropriate.
+    if (notification === 'USER_ACTION') {
       const action = payload && payload.action;
       this.handleAction(action).catch(e => this.log('Action error: ' + e.message));
     }

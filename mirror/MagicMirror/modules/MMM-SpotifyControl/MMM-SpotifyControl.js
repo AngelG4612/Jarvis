@@ -18,14 +18,33 @@ Module.register("MMM-SpotifyControl", {
   }
 ,
 
-  // Listen for user actions broadcasted by other modules and forward them to
-  // this module's node_helper via sendSocketNotification so the helper can
-  // perform API calls.
+  // Listen for user actions and forward relevant ones to the node_helper to
+  // perform Spotify API calls. Ignore generic navigation `up`/`down` broadcasts
+  // that originate from other modules to avoid accidental skips.
   notificationReceived(notification, payload, sender) {
-    if (notification === 'USER_ACTION' || notification === 'BUTTON_PRESS') {
-      // payload: { action: 'spotify_next' | 'spotify_pause' | ... }
-      Log.info(`MMM-SpotifyControl: forwarding ${notification} -> USER_ACTION`, payload);
-      this.sendSocketNotification('USER_ACTION', payload);
+    // Ignore raw BUTTON_PRESS broadcasts here. The front-end modules (e.g.
+    // MMM-SpotifyPlayer) will respond to BUTTON_PRESS for UI selection. We
+    // avoid forwarding BUTTON_PRESS to the control helper to prevent
+    // accidental mapping of navigation (up/down) to spotify_prev/next.
+    if (notification === 'BUTTON_PRESS') {
+      Log.info(`MMM-SpotifyControl: ignoring BUTTON_PRESS (front-end handles navigation)`, payload);
+      return;
+    }
+
+    // For USER_ACTION, be selective:
+    // - forward if action already names a spotify_* command
+    // - forward if the action originates from this module's own UI (sender matches)
+    // - otherwise ignore navigation actions from external broadcasters
+    if (notification === 'USER_ACTION') {
+      const action = payload && payload.action;
+      const isSpotify = typeof action === 'string' && action.startsWith && action.startsWith('spotify');
+      const isLocal = sender && sender.name === this.name;
+      if (isSpotify || isLocal) {
+        Log.info(`MMM-SpotifyControl: forwarding USER_ACTION -> USER_ACTION`, payload);
+        this.sendSocketNotification('USER_ACTION', payload);
+      } else {
+        Log.info(`MMM-SpotifyControl: ignoring external USER_ACTION`, payload);
+      }
     }
   }
 });

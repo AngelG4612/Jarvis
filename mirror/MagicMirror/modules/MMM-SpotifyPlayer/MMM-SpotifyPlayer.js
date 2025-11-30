@@ -100,21 +100,25 @@ Module.register("MMM-SpotifyPlayer", {
     i.className = `fa ${iconClass}`;
     btn.appendChild(i);
     btn.addEventListener('click', () => {
-      // Broadcast a client-side notification so other modules (like MMM-SpotifyControl)
-      // can receive it and forward to their node_helper.
-      this.sendNotification('USER_ACTION', { action });
-      // Ask our local SpotifyPlayer node_helper to refresh state immediately so the
-      // UI reflects the new playback state without waiting for the periodic poll.
-      // We schedule an immediate refresh and a follow-up refresh after a short
-      // delay to allow the control helper time to execute the action on Spotify.
-      try {
-        this.sendSocketNotification('SPOTIFY_PLAYER_REFRESH');
-        setTimeout(() => this.sendSocketNotification('SPOTIFY_PLAYER_REFRESH'), 700);
-      } catch (e) {
-        // ignore in case node_helper is not available
-      }
+      this.performAction(action, true);
     });
     return btn;
+  },
+
+  // Centralized action performer: optionally broadcast USER_ACTION then
+  // request an immediate refresh of player state so the UI updates without
+  // waiting for the normal poll interval.
+  performAction(action, broadcast = false) {
+    if (!action) return;
+    if (broadcast) {
+      try { this.sendNotification('USER_ACTION', { action }); } catch (e) {}
+    }
+    try {
+      this.sendSocketNotification('SPOTIFY_PLAYER_REFRESH');
+      setTimeout(() => this.sendSocketNotification('SPOTIFY_PLAYER_REFRESH'), 700);
+    } catch (e) {
+      // ignore in case node_helper is not available
+    }
   },
 
   // Helper: build a control element but include index so selection can be highlighted
@@ -248,16 +252,22 @@ Module.register("MMM-SpotifyPlayer", {
 
   notificationReceived(notification, payload, sender) {
     // handle keyboard / button bridge events
-    if (notification === 'BUTTON_PRESS' || notification === 'USER_ACTION') {
-      const action = payload && payload.action;
-      if (!action) return;
-      // navigation: up/down/left/right or ha_prev/ha_next synonyms
-      if (action === 'up' || action === 'ha_prev' || action === 'left') {
+    const isButton = (notification === 'BUTTON_PRESS');
+    const isUserAction = (notification === 'USER_ACTION');
+    if (!isButton && !isUserAction) return;
+    const action = payload && payload.action;
+    if (!action) return;
+
+    // Only treat navigation from physical button presses or from this module's own UI
+    const isLocalUI = (isUserAction && sender && sender.name === this.name);
+    if (isButton || isLocalUI) {
+      // navigation: up/down/left/right — only change selection here
+      if (action === 'up' || action === 'left') {
         this.selectedControl = Math.max(0, this.selectedControl - 1);
         this.updateDom(0);
         return;
       }
-      if (action === 'down' || action === 'ha_next' || action === 'right') {
+      if (action === 'down' || action === 'right') {
         this.selectedControl = Math.min(2, this.selectedControl + 1);
         this.updateDom(0);
         return;
@@ -266,17 +276,21 @@ Module.register("MMM-SpotifyPlayer", {
         // perform the selected control action
         const map = [ 'spotify_prev', (this.state && this.state.is_playing) ? 'spotify_pause' : 'spotify_play', 'spotify_next' ];
         const act = map[this.selectedControl] || 'spotify_toggle';
-        this.sendNotification('USER_ACTION', { action: act });
-        try { this.sendSocketNotification('SPOTIFY_PLAYER_REFRESH'); setTimeout(()=>this.sendSocketNotification('SPOTIFY_PLAYER_REFRESH'),700); } catch(e){}
+        this.performAction(act, true);
         return;
       }
-      // If action is direct spotify control, let it pass through (module may refresh itself)
-      if (action.startsWith && action.startsWith('spotify')) {
-        // update selection to nearest control
-        if (action === 'spotify_prev') this.selectedControl = 0;
-        if (action === 'spotify_next') this.selectedControl = 2;
-        if (action === 'spotify_play' || action === 'spotify_pause' || action === 'spotify_toggle') this.selectedControl = 1;
-        this.updateDom(0);
+    }
+    // If action is direct spotify control, update selection and trigger a
+    // refresh so the UI stays in sync. If the action came from another module
+    // (e.g. MMM-PhysicalButtons or MMM-SpotifyControl) we only refresh here
+    // without rebroadcasting to avoid loops.
+    if (action.startsWith && action.startsWith('spotify')) {
+      if (action === 'spotify_prev') this.selectedControl = 0;
+      if (action === 'spotify_next') this.selectedControl = 2;
+      if (action === 'spotify_play' || action === 'spotify_pause' || action === 'spotify_toggle') this.selectedControl = 1;
+      this.updateDom(0);
+      if (!(sender && sender.name === this.name)) {
+        this.performAction(action, false);
       }
     }
   }

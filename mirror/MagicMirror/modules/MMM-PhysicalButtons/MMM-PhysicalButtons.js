@@ -47,6 +47,8 @@ Module.register("MMM-PhysicalButtons", {
           if (String(mapped) === String(key) || mapped === key) {
             // simulate a press
             this.sendNotification('BUTTON_PRESS', { action });
+            // If this action is a direct spotify control, also emit USER_ACTION
+            try { if (typeof action === 'string' && action.startsWith && action.startsWith('spotify')) this.sendNotification('USER_ACTION', { action }); } catch (e) {}
             this._flashButton(action);
             // update debug
             this._dbg = { last: action, when: Date.now() };
@@ -78,6 +80,8 @@ Module.register("MMM-PhysicalButtons", {
       if (typeof console !== 'undefined' && console.log) console.log('MMM-PhysicalButtons socket BUTTON_PRESS', payload);
       // broadcast as front-end notification for other modules
       try { this.sendNotification('BUTTON_PRESS', payload); } catch (e) {}
+      // If helper sent an explicit spotify control, also forward as USER_ACTION
+      try { const a = payload && payload.action; if (typeof a === 'string' && a.startsWith && a.startsWith('spotify')) this.sendNotification('USER_ACTION', { action: a }); } catch (e) {}
       // update UI highlight
       try {
         const action = payload && payload.action;
@@ -101,6 +105,8 @@ Module.register("MMM-PhysicalButtons", {
     try {
       // Broadcast as front-end notification so listeners behave the same as real buttons
       this.sendNotification('BUTTON_PRESS', { action });
+      // If this is a direct spotify control button, also broadcast as USER_ACTION
+      try { if (typeof action === 'string' && action.startsWith && action.startsWith('spotify')) this.sendNotification('USER_ACTION', { action }); } catch (e) {}
       // also locally flash the button
       this._flashButton(action);
       // update debug indicator
