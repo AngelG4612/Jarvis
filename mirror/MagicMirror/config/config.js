@@ -138,13 +138,15 @@ let config = {
 				clientSecret: "aa865fb57a2346b592a81c1cce37e790",
 				// accessToken: "BQBH0611ihsf0oDT3f5LBBVgIxkCxInC3O297TlGCoJ3MmLjIBPSjrw_ZgbiYviecdUrJ8fH5aTbfrOuJe-wVb35wqTX4uK5MBplT-LhG5-tx4yNGrVCj1CyQ7NTdOAixJtniOgk93Cw7gwX1AZ4S0NIE7_aPQKlHsnh910mrD2TJkQPC5xL_BcnuB6iKMkwluSVVkAgFxfbDDFcVk9gotq872V08zJLKQ32ctSwaANWXpl9VFDe8PM6rjE",
 				refreshToken: "AQAwmsFWrsTb38Nx1fPvvtFEfTuRYj8prKryvFAxJDjshByLhGc9fFeRdKUQO3bOF2kzyMrEmK0Hv9zHK-r-bZZjW3pW4cibr-Jw-TixxZAUsSjnh_YhqbF_FeMK3p-iOdg",
-				updateInterval: 5000
+				updateInterval: 5000,
+				// Do not render the front-end UI for this module
+				visible: true
 			}
 		},
 
 		// Home Assistant Module
 		{
-			module: "MMM-HomeAssistant",
+			module: "MMM-HomeAssistant", // module_11_MMM-HomeAssistant
 			position: "top_left",
 			config: {
 				title: "Home Environment Sensors",
@@ -173,7 +175,7 @@ let config = {
 
 		// Home Assistant Module
 		{
-			module: "MMM-HomeAssistant",
+			module: "MMM-HomeAssistant", // module_12_MMM-HomeAssistant
 			position: "top_left",
 			config: {
 				title: "Home Status",
@@ -188,7 +190,7 @@ let config = {
 				entities: [
 					{id: "switch.kitchen_main_lights", name: "Kitchen Main Lights ", icon: "fa-lightbulb"},
 					{id: "light.guest_bedroom_main_lights", name: "Guest Bedroom Lights ", icon: "fa-lightbulb"},
-					{id: "light.master_bedroom_main_lights", name: "Master Bedroom Lights ", icon: "fa-lightbulb" }
+					{id: "light.master_bedroom_main_lights", name: "Master Bedroom Lights  ", icon: "fa-lightbulb" }
 					
 
 					// {id: "camera.tapo_c230_a14d_live_view", name: "Living Room Camera", icon: "fa-video"}
@@ -251,12 +253,18 @@ let config = {
 				keys: {
 					up: "ArrowUp",
 					down: "ArrowDown",
+					switch: "m", // key to cycle focus between control-capable modules
                 
 					select: "Enter",
 					spotify_next: ">",
 					spotify_prev: "<",
 					spotify_pause: "1"
-				}
+				},
+
+				controlModules: [ 
+					"MMM-SpotifyPlayer", 
+					"module_12_MMM-HomeAssistant" 
+				]
 			}
 		},
 
@@ -265,10 +273,11 @@ let config = {
 			module: "MMM-SpotifyControl",
 			position: "bottom_center",
 			config: {
+				
 				clientID: "1409bba120724394b7ca3082548c705d",
 				clientSecret: "aa865fb57a2346b592a81c1cce37e790",
-				refreshToken: "AQAwmsFWrsTb38Nx1fPvvtFEfTuRYj8prKryvFAxJDjshByLhGc9fFeRdKUQO3bOF2kzyMrEmK0Hv9zHK-r-bZZjW3pW4cibr-Jw-TixxZAUsSjnh_YhqbF_FeMK3p-iOdg"
-
+				refreshToken: "AQAwmsFWrsTb38Nx1fPvvtFEfTuRYj8prKryvFAxJDjshByLhGc9fFeRdKUQO3bOF2kzyMrEmK0Hv9zHK-r-bZZjW3pW4cibr-Jw-TixxZAUsSjnh_YhqbF_FeMK3p-iOdg",
+				visible: true
 				// refreshToken: "AQAor-vzeFafvSknqwu8dzoB2iCgkk129I71mor5RPMPy-SdleO89Iv2cEssYMqw_C0i8pL_OI9Un_ZvB7mRGgFideD_4wxfQ85p0PochVMAPFII-B69hqyJ_M3QUeZODPk",
 				// accessToken: "BQADpG1d6-jPVfU1YUhtZWEe2RG4JjP1EfDMcCqWlZTSb0zn8VnOSifRyP0k7_uWGHIf5Y2aibXktX9AzBz0Q2-fgLJaacb_hRmqBVqrUEKwW98pgldX9yPDL8V9XNki5JEHoNOgwg4Nh0_TeOpnoG1qfRErAZlqPKI6BNpVB9t08vcu3J0vp17_eR86t0HnC-IdrvNM9rcnaWiPzNRCICJkO-tGJGvnjzvmEfjTpjRX0Wp2YHJWOd963mc"
 			}
